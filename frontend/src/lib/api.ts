@@ -68,14 +68,33 @@ interface CustomRequestConfig extends AxiosRequestConfig {
 }
 
 async function performRefresh(): Promise<void> {
-  await api.post("/auth/refresh", null, {
+  const res = await api.post("/auth/refresh", null, {
     skipAuthRefresh: true,
     headers: { "Content-Type": "application/json" },
   } as CustomRequestConfig);
-  const token = useAuthStore.getState().csrfToken;
+  const body = res.data as { data?: { csrf_token?: string } } | undefined;
+  const token = body?.data?.csrf_token;
   if (!token) {
     throw new Error("refresh response missing csrf_token");
   }
+  useAuthStore.getState().setCsrfToken(token);
+}
+
+let restorePromise: Promise<boolean> | null = null;
+
+export async function tryRestoreSession(): Promise<boolean> {
+  restorePromise = restorePromise ?? (async () => {
+    try {
+      await performRefresh();
+      return true;
+    } catch {
+      useAuthStore.getState().clear();
+      return false;
+    } finally {
+      restorePromise = null;
+    }
+  })();
+  return restorePromise;
 }
 
 api.interceptors.response.use(
