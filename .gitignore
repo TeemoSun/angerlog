@@ -28,14 +28,12 @@ frontend/dist/
 *.swp
 *.swo
 
+# Kilo
+.kilo/
+
 # OS
 .DS_Store
 Thumbs.db
-
-# Secrets / certs
-certs/
-*.pem
-*.key
 
 # Env
 .env
