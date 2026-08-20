@@ -1,55 +1,64 @@
 # AGENTS.md
 
-情绪瓶（angerlog）：把生气记录抽象为投入瓶中的小球，帮助觉察情绪规律。React 前端 + FastAPI 后端 + PostgreSQL，Docker 分发。
+情绪瓶（angerlog）：把生气记录抽象为投入瓶中的小球，帮助觉察情绪规律。React 18 前端 + FastAPI 后端 + PostgreSQL，Docker 分发。设计决策以 `docs/设计文档.md` 为准，但**实现细节以代码为准**（README 仍写 Python 3.11，实际是 3.12；文档里的 `Secure` cookie 实际代码是 `secure=False`）。
 
-> 仓库当前**尚无业务代码**（仅有 `docs/`、`Dockerfile`、`scripts/`、`README.md`）。`docs/设计文档.md` 是设计决策的唯一权威来源；下方约定据此与已存在的 `Dockerfile` 提炼，写代码时必须遵守。
+## 目录结构与架构
 
-## 目录结构（待建，非 monorepo workspace）
+- `backend/` — Python 3.12 + FastAPI + SQLAlchemy 2.0(async) + Alembic，**uv 管理**（非 pip）。分层：`app/api/v1`（路由）→ `app/services` → `app/repositories` → `app/models`；`app/core/` 为 config/database/security/dependencies/errors/response。迁移在 `backend/migrations/versions/`（当前仅 `0001_initial_schema`）。`[tool.uv] package = false`，导入按 `app.*` 路径。
+- `frontend/` — React 18 + TS + Vite 6 + **Tailwind v4**（`@import "tailwindcss"` + `@theme`，**没有 tailwind.config 文件**，无 Tailwind 插件，用 `@tailwindcss/postcss`）。shadcn 风格 UI 组件手写在 `src/components/ui/`；状态用 zustand（`src/stores/`），表单 react-hook-form + zod，动画 framer-motion，图表 recharts。
+- 仓库**没有 compose 文件**（`docs/Docker镜像打包上传.md` 提到 `docker-compose.yml` 但尚未落地）；postgres 需自己起（测试和本地 dev 都在 `localhost:54329`）。
 
-- `backend/` — Python **3.12** + FastAPI + SQLAlchemy 2.0(异步) + Alembic，用 **uv**（不是 pip）。`backend/app/` 为应用，`backend/migrations/` 为 Alembic 迁移，`backend/tests/` 为 pytest。命令一律 `cd backend && uv run ...`。> 注：设计文档写的是 3.11，但根 `Dockerfile` 用 `python:3.12-slim`，以 Dockerfile 为准。
-- `frontend/` — React 18 + TS + Vite + shadcn/ui + Tailwind。构建 `tsc -b && vite build`，产物 `frontend/dist/` 由后端生产环境静态托管。
-- 后端开发与前端开发分开跑；`docker compose up -d` 跑全栈（postgres + backend）。
+## 常用命令
 
-## 后端依赖（uv）
+后端（在 `backend/` 下，一律 `uv run ...`）：
 
-`backend/pyproject.toml` 已落地（非 `app/` 代码，先把依赖固定下来）。要点：
+```bash
+uv run uvicorn app.main:app --reload      # dev server :8000
+uv run pytest                             # 34 个用例（已全绿）
+uv run pytest tests/test_stats.py -k heatmap   # 单文件/单用例
+uv run ruff check app && uv run mypy app # 当前均通过
+uv run alembic revision -m "..."          # 生成迁移（手动跑迁移无意义，见下）
+```
 
-- 运行依赖：`fastapi`、`uvicorn[standard]`、`sqlalchemy[asyncio]`、`alembic`、**`asyncpg`**（异步 PG 驱动，连接串 `postgresql+asyncpg://`，**不要用 psycopg**）、`pydantic-settings`、`pyjwt`、`bcrypt`（直接用，非 passlib）、`python-multipart`（表单/文件）。
-- 开发依赖（dependency-groups `dev`）：`pytest`、`pytest-asyncio`（`asyncio_mode = "auto"`）、`httpx`（AsyncClient 测试）、`ruff`、`mypy`。
-- 无 `gunicorn`（Dockerfile 直接 uvicorn 启动）、无 `cryptography`（无 RSA）、无 `apscheduler`（无定时任务）。
-- `[tool.uv] package = false` —— 非打包项目，导入按 `app.*` 路径。
-- 常用命令（在 `backend/` 下）：`uv sync`（装依赖并生成 `uv.lock`）、`uv sync --no-dev`（生产/Docker）、`uv add <pkg>`、`uv run uvicorn app.main:app --reload`、`uv run pytest`、`uv run ruff check app`、`uv run mypy app`。
-- 改 `pyproject.toml` 后必须 `uv sync` 更新 `uv.lock`；Docker 用 `uv sync --frozen`，锁不同步会构建失败。
+前端（在 `frontend/` 下）：
 
-## Docker 打包上传（已落地，必读）
+```bash
+npm run dev          # vite :5173，代理 /api 和 /health → 127.0.0.1:8000（需后端在跑）
+npm run build        # tsc -b && vite build，产物 frontend/dist/ 由后端静态托管
+npm run test         # vitest run，12 个用例（已全绿）
+```
 
-详见 `docs/Docker镜像打包上传.md`，一键脚本 `scripts/docker-push.sh`。要点：
+验证顺序：`ruff check` → `mypy` → `pytest`（后端）；`tsc -b` → `vitest`（前端）。
 
-- 根目录多阶段 `Dockerfile`：Stage1 `node:20-bookworm-slim` 跑 `npm ci`(回退 `npm install`)+`npm run build`；Stage2 `python:3.12-slim` + `uv`（来自 `ghcr.io/astral-sh/uv:latest`），`uv sync --frozen --no-dev`，拷入后端代码与前端 `dist`，`uvicorn` 启动，内置 `HEALTHCHECK` 探 `/health`。
-- **tag 规范**：同时打 `pigzho/angerlog:latest` 与 `pigzho/angerlog:<YYYYMMDD>`（当日日期）。Docker Hub 用户名固定 `pigzho`。**不要用 git commit hash 做 tag**。
-- 流程：`docker build` → `docker login`(已登录可跳过) → `docker push` 两个 tag。一键：`DOCKER_USER=pigzho bash scripts/docker-push.sh`。
-- 删除远程 tag 需走 Docker Hub API（JWT），见文档；本地 `docker rmi`。
-- `uv.lock` 与 `package-lock.json` 必须与依赖同步，否则 Docker `--frozen` / `npm ci` 构建失败。
+## 本地开发与测试的坑
+
+- **测试必须连 PostgreSQL**：`tests/conftest.py` 硬编码 `postgresql+asyncpg://app_user:testpass@localhost:54329/emotion_bottle_test`（端口 54329，不是 5432）。conftest 直接 `Base.metadata.drop_all/create_all`（不走 Alembic），每用例后 TRUNCATE 三张表并重建用户。本机 54329 上需存在该库和 `app_user`，否则 pytest 直接失败。
+- 后端 `.env`（gitignored）里 `DATABASE_URL` 指向同一 54329 实例的 `emotion_bottle` 库，`FRONTEND_DIST` 指向本地 `frontend/dist`（容器内默认 `/app/frontend/dist`）。
+- 测试登录密码 `testpass123`，哈希在 conftest 中写死为 bcrypt cost=12。
+- 速率限制器是**进程内滑动窗口**（`LoginRateLimiter`，按客户端 IP），重启即清零；写测试时注意 `login_limiter._attempts` 的清理（conftest 已处理）。
 
 ## 关键架构约定（写代码时易踩坑）
 
-- **无 RSA、无应用层密码加密**：登录密码依赖上层代理的 TLS，后端收明文与 bcrypt 哈希比对。**不要再加 RSA/crypto-js/`/auth/public-key`/`certs/`**（曾评审后移除）。
-- **无 Nginx、无 HTTPS 证书**：本项目只提供 HTTP，TLS 由上层反向代理负责。compose 里**不要**加 nginx 服务。
-- **认证用双 Token + HttpOnly Cookie，不是 localStorage JWT**：access 15 分钟、refresh 30 天，均置 HttpOnly Cookie（`Secure + SameSite`）；refresh 仅存哈希于 `refresh_tokens` 表，支持轮换与吊销。写操作必须带 `X-CSRF-Token` 头，后端校验。Axios 配 `withCredentials: true`。
-- **数据库时区**：`TIMESTAMPTZ` 一律存 UTC；星期/小时统计在查询时按 `users.timezone` 用 `EXTRACT(ISODOW/HOUR FROM created_at AT TIME ZONE :tz)` 动态计算。**不要用生成列**（`day_of_week`/`hour_of_day` 已从设计移除）。星期用 ISO 语义（周一=1…周日=7）。
-- **软删除**：`anger_logs.is_deleted`，所有列表/统计查询默认带 `is_deleted = FALSE`（统计排除已删除）。`DELETE /logs/{id}` 只置 true。
-- **category 是枚举**：DB 层 `CHECK (category IN ('工作','家庭','交通','社交','其他') OR category IS NULL)`，不要存自由文本。
-- **账号初始化**：应用启动时按环境变量 `USERNAME`/`PASSWORD_HASH` 对 `users` 表 upsert（幂等），无注册功能。bcrypt cost=12。
-- **健康检查路径是 `/health`**（不是 `/api/health`）。Dockerfile HEALTHCHECK 与上层探活都用它。
-- **迁移由 `app.main` lifespan 启动时自动执行**（Dockerfile 不单独跑迁移）；`users` upsert 也在启动事件完成。必需环境变量缺失时启动直接失败退出（Pydantic Settings 校验）。
-- **审计字段**：`anger_logs.updated_at` 与 `resolved_at` 分开；标记解决时同时更新 `updated_at`。
+- **响应统一 envelope**：成功 `{code: 0, message: "success", data, meta?}`；错误码集中在 `app/core/errors.py`（40001 参数、40102 access 过期、40103 refresh 无效、40301 CSRF、40401 不存在、42901 限流、50000 内部错误），错误响应用 `app/core/response.py` 的 `fail()`。**前端按 `code` 数字判断**（`src/lib/api.ts`：40102 触发自动刷新），不要改错误码。
+- **认证是双 HttpOnly Cookie**（access 15min / refresh 30d），refresh 仅存 SHA-256 哈希、轮换时吊销旧 token。cookie `httponly=True, samesite="lax"`，**`secure=False`**（本地纯 HTTP，别"修复"成 True）。
+- **CSRF 无独立 token 存储**：`issue_csrf_token` 用 `CSRF_SECRET` 对 access token 做 HMAC 派生，login/refresh 响应体返回，前端存 zustand；`csrf_protect` 依赖校验 `X-CSRF-Token` 头。写操作（POST/PUT/DELETE）必须过 `Depends(csrf_protect)`。Axios 拦截器在写请求自动带头、40102 时单飞刷新后重放（`_retried`/`skipAuthRefresh`）。
+- **数据库时区**：`TIMESTAMPTZ` 一律存 UTC；趋势/热力图查询时用 `func.timezone(tz, ...)` + `date_trunc` / `EXTRACT(ISODOW/HOUR)` 按用户时区动态计算（`stats_repository.py`）。**不要加生成列**。星期用 ISO 语义（周一=1…周日=7）。
+- **软删除**：`anger_logs.is_deleted`，所有列表/统计查询默认 `is_deleted = FALSE`；`DELETE /logs/{id}` 只置 true。部分索引带 `postgresql_where` 部分索引条件。
+- **category 是枚举**：DB CHECK + Pydantic 校验都限定 `('工作','家庭','交通','社交','其他')`，存 `NULL` 合法。
+- **启动即迁移**：`app.main` lifespan 自动跑 Alembic 到 head + upsert 默认用户（`USERNAME`/`PASSWORD_HASH`/`USER_TIMEZONE`），Docker 不单独跑迁移。缺必需环境变量（`DATABASE_URL`/`USERNAME`/`PASSWORD_HASH`/`SECRET_KEY`/`CSRF_SECRET`）启动直接失败。
+- `PASSWORD_HASH` 必须是 bcrypt `$2a/$2b/$2y` 前缀的哈希（config 校验），cost=12；`LOGIN_RATE_LIMIT` 格式 `N/minutes`（如 `5/5minutes`）。
+- **无 `/docs`**（`docs_url=None, redoc_url=None`）；健康检查是 `/health`（做 `SELECT 1`）。`/api/v1` 前缀：auth/logs/stats 三个 router。
+- 标记解决时同时更新 `updated_at` 并填 `resolved_at`；`intensity` CHECK 1-10。
+- **无 RSA/应用层加密、无 Nginx**：密码靠上层 TLS 明文传输，后端 bcrypt 比对（曾评审后移除，别再加回来）。
 
-## 环境变量（`.env`，启动校验必需项）
+## 环境变量（见 `backend/.env.example`）
 
-`DATABASE_URL`、`USERNAME`、`PASSWORD_HASH`、`USER_TIMEZONE`、`SECRET_KEY`、`CSRF_SECRET`、`ACCESS_TOKEN_EXPIRE_MINUTES`、`REFRESH_TOKEN_EXPIRE_DAYS`、`LOGIN_RATE_LIMIT`、`CORS_ORIGINS`。完整见设计文档 5.2。空占位值须启动失败。
+`DATABASE_URL`、`USERNAME`、`PASSWORD_HASH`、`USER_TIMEZONE`、`SECRET_KEY`、`CSRF_SECRET`、`ACCESS_TOKEN_EXPIRE_MINUTES`、`REFRESH_TOKEN_EXPIRE_DAYS`、`LOGIN_RATE_LIMIT`、`CORS_ORIGINS`、`FRONTEND_DIST`（静态托管路径）。
 
-## 测试（待建）
+## Docker 打包上传
 
-- 后端：pytest + httpx AsyncClient，重点覆盖双 token/刷新/登出、软删除过滤、统计按时区计算、速率限制、CSRF。测试用独立 PG 实例或事务回滚隔离。
-- 前端：Vitest + React Testing Library，覆盖表单校验、呼吸引导(强度≥8触发)、水位联动、筛选。
-- 无 E2E、无覆盖率门槛（当前未纳入）。
+详见 `docs/Docker镜像打包上传.md`，一键 `DOCKER_USER=pigzho bash scripts/docker-push.sh`：
+
+- 多阶段：Stage1 node:20 跑 `npm ci`(回退 `npm install`) + `npm run build`；Stage2 python:3.12-slim + uv（`uv sync --frozen --no-dev`），uvicorn 启动，HEALTHCHECK 探 `/health`。
+- **tag 规范**：同时打 `pigzho/angerlog:latest` 与 `pigzho/angerlog:<YYYYMMDD>`（当日日期），**不用 commit hash**。
+- `uv.lock` / `package-lock.json` 必须与依赖同步，否则 `--frozen` / `npm ci` 构建失败（改依赖后跑 `uv sync` / `npm install` 更新锁文件）。
