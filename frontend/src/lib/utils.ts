@@ -34,10 +34,17 @@ export function startOfThisWeekStr(): string {
 export const WEEKDAYS_CN = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
 export function intensityColor(intensity: number): string {
-  if (intensity <= 3) return "#fde68a";
+  if (intensity <= 3) return "#f6d365";
   if (intensity <= 6) return "#fbbf24";
   if (intensity <= 8) return "#fb923c";
   return "#dc2626";
+}
+
+export function intensityLabel(intensity: number): string {
+  if (intensity <= 3) return "生气";
+  if (intensity <= 6) return "很生气";
+  if (intensity <= 8) return "非常生气";
+  return "特别生气";
 }
 
 export function intensityDescription(intensity: number): string {

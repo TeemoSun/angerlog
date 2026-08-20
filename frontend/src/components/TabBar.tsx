@@ -34,9 +34,15 @@ export function TabBar({
     if (location.pathname !== "/") navigate("/");
   };
 
+  const tabIcon = (key: TabKey) => {
+    if (key === "bottle") return "🫙";
+    if (key === "logs") return "✉️";
+    return "📈";
+  };
+
   if (isMobile) {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-slate-950/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-night-900/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl">
         <div className="mx-auto flex max-w-md">
           {TABS.map((tab) => (
             <button
@@ -44,22 +50,26 @@ export function TabBar({
               type="button"
               onClick={() => select(tab.key)}
               className={
-                "flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs " +
+                "relative flex flex-1 flex-col items-center gap-1 py-3 text-xs transition " +
                 (active === tab.key
-                  ? "text-amber-300"
+                  ? "text-star-amber"
                   : "text-slate-400 hover:text-slate-200")
               }
             >
+              <motion.span
+                className="text-xl leading-none"
+                animate={active === tab.key ? { scale: 1.15, y: -2 } : { scale: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                {tabIcon(tab.key)}
+              </motion.span>
+              <span>{tab.mobileLabel}</span>
               {active === tab.key && (
                 <motion.span
-                  layoutId="tab-indicator"
-                  className="absolute top-0 h-0.5 w-10 rounded-full bg-amber-400"
+                  layoutId="mobile-tab-glow"
+                  className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-gradient-to-r from-transparent via-star-amber to-transparent"
                 />
               )}
-              <span className="text-base leading-none">
-                {tab.key === "bottle" ? "🫙" : tab.key === "logs" ? "📋" : "📈"}
-              </span>
-              <span>{tab.mobileLabel}</span>
             </button>
           ))}
         </div>
@@ -77,7 +87,7 @@ export function TabBar({
           className={
             "rounded-full px-4 py-1.5 text-sm transition " +
             (active === tab.key
-              ? "bg-amber-500/20 text-amber-200 ring-1 ring-amber-400/40"
+              ? "bg-gradient-to-r from-star-gold/20 to-star-amber/20 text-star-amber ring-1 ring-star-amber/40 shadow-[0_0_12px_rgba(251,191,36,0.15)]"
               : "text-slate-300 hover:text-white")
           }
         >

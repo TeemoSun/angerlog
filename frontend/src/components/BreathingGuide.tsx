@@ -36,12 +36,12 @@ export function BreathingGuide({ active }: { active: boolean }) {
 
   return (
     <div
-      className="flex flex-col items-center gap-3 rounded-2xl border border-sky-400/20 bg-sky-500/10 p-4 text-sky-100"
+      className="flex flex-col items-center gap-3 rounded-2xl border border-star-amber/20 bg-gradient-to-b from-star-gold/10 to-star-amber/10 p-4 text-amber-900/80"
       data-testid="breathing-guide"
     >
       <div className="relative flex h-28 w-28 items-center justify-center">
         <motion.div
-          className="absolute inset-0 rounded-full border-2 border-sky-400/40"
+          className="absolute inset-0 rounded-full border-2 border-star-amber/40"
           animate={{
             scale: active ? phase.scale : 0.8,
             opacity: active ? 1 : 0.5,
@@ -53,19 +53,19 @@ export function BreathingGuide({ active }: { active: boolean }) {
           data-testid="breathing-ring"
         />
         <motion.div
-          className="h-14 w-14 rounded-full bg-sky-400/30 blur-[2px]"
+          className="h-14 w-14 rounded-full bg-gradient-to-br from-star-gold/40 to-star-amber/30 blur-[2px]"
           animate={{ scale: active ? Math.max(phase.scale - 0.25, 0.5) : 0.4 }}
           transition={{ duration: active ? phase.seconds : 0.3, ease: "easeInOut" }}
         />
-        <span className="absolute text-sm font-semibold text-sky-100">
+        <span className="absolute text-sm font-semibold text-amber-900">
           {active ? phase.label : "准备"}
         </span>
       </div>
-      <p className="text-sm text-sky-200/80">
+      <p className="text-sm text-amber-800/80">
         4-7-8 呼吸：吸气 4 秒 · 屏息 7 秒 · 呼气 8 秒
       </p>
       {active && (
-        <p className="text-xs text-sky-300/60" data-testid="breathing-cycle">
+        <p className="text-xs text-amber-700/60" data-testid="breathing-cycle">
           已跟随 {cycle} 轮
         </p>
       )}

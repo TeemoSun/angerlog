@@ -1,5 +1,56 @@
 @import "tailwindcss";
+@import "@chinese-fonts/lxgwwenkai/dist/LXGWWenKai-Regular/result.css";
 
 @theme {
   --font-sans: "Noto Sans SC Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-hand: "LXGW WenKai", "PingFang SC", "Microsoft YaHei", cursive;
+
+  /* 夜空 */
+  --color-night-900: #0b0a1a;
+  --color-night-800: #15122b;
+  --color-night-700: #1e1842;
+  --color-night-600: #2a2258;
+
+  /* 星光 */
+  --color-star-gold: #f6d365;
+  --color-star-amber: #fbbf24;
+  --color-star-orange: #fb923c;
+  --color-star-red: #ef4444;
+  --color-star-crimson: #dc2626;
+
+  /* 纸张/信笺 */
+  --color-paper: #faf6ed;
+  --color-paper-muted: #f0e9db;
+  --color-ink: #3d3429;
+  --color-ink-light: #7a6f60;
+
+  /* 玻璃 */
+  --color-glass: rgba(255, 255, 255, 0.08);
+  --color-glass-border: rgba(255, 255, 255, 0.15);
+  --color-glass-strong: rgba(255, 255, 255, 0.12);
+}
+
+.font-hand {
+  font-family: var(--font-hand);
+}
+
+/* 星光 glow 滤镜 */
+.star-glow {
+  filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.5));
+}
+
+/* 自定义滚动条（webkit） */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }

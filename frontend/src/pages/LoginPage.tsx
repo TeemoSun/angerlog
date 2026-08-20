@@ -44,31 +44,43 @@ export function LoginPage() {
   return (
     <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
         className="w-full max-w-sm"
       >
-        <Card>
-          <CardHeader className="items-center text-center">
-            <div className="mb-2 text-5xl">🫙</div>
-            <CardTitle className="text-xl">情绪瓶</CardTitle>
-            <CardDescription>把生气装进瓶子，让情绪有处安放</CardDescription>
+        <Card className="overflow-hidden border border-paper-muted/50 bg-paper text-ink shadow-2xl shadow-black/30">
+          <div className="h-2 bg-gradient-to-r from-star-gold via-star-amber to-star-orange" />
+          <CardHeader className="items-center pt-8 text-center">
+            <motion.div
+              className="mb-3 text-6xl drop-shadow-lg"
+              animate={{ y: [0, -6, 0], rotate: [0, 3, -3, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              🫙
+            </motion.div>
+            <CardTitle className="font-hand text-4xl font-normal tracking-wide text-ink">
+              情绪瓶
+            </CardTitle>
+            <CardDescription className="mt-2 text-ink-light">
+              把生气折成星星，装进瓶子
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={submit} className="flex flex-col gap-4" data-testid="login-form">
+            <form onSubmit={submit} className="flex flex-col gap-5" data-testid="login-form">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="username">用户名</Label>
+                <Label htmlFor="username" className="text-sm font-medium text-ink">用户名</Label>
                 <Input
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   autoComplete="username"
                   placeholder="请输入用户名"
+                  className="rounded-xl border-paper-muted bg-white/70 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="password">密码</Label>
+                <Label htmlFor="password" className="text-sm font-medium text-ink">密码</Label>
                 <Input
                   id="password"
                   type="password"
@@ -76,15 +88,21 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   placeholder="请输入密码"
+                  className="rounded-xl border-paper-muted bg-white/70 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
                 />
               </div>
               {error && (
-                <p className="text-xs text-red-400" role="alert" data-testid="login-error">
+                <p className="text-xs text-star-crimson" role="alert" data-testid="login-error">
                   {error}
                 </p>
               )}
-              <Button type="submit" size="lg" disabled={submitting} className="mt-2">
-                {submitting ? "登录中…" : "登录"}
+              <Button
+                type="submit"
+                size="lg"
+                disabled={submitting}
+                className="mt-1 w-full rounded-full bg-gradient-to-r from-star-gold via-star-amber to-star-orange text-ink shadow-lg shadow-amber-900/20 transition hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-900/30 disabled:opacity-60"
+              >
+                {submitting ? "登录中…" : "开启瓶子"}
               </Button>
             </form>
           </CardContent>

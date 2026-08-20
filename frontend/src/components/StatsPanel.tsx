@@ -88,19 +88,25 @@ export function StatsPanel() {
         </div>
       )}
 
-      <Card>
+      <Card className="border-white/10 bg-white/5 backdrop-blur-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>趋势</CardTitle>
-            <CardDescription>本周期内记录次数与平均强度</CardDescription>
+            <CardTitle className="font-hand text-xl text-paper">趋势</CardTitle>
+            <CardDescription>本周期内记录次数</CardDescription>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 rounded-full border border-white/10 bg-white/5 p-1">
             {(["day", "week", "month"] as const).map((g) => (
               <Button
                 key={g}
                 size="sm"
                 variant={granularity === g ? "secondary" : "ghost"}
                 onClick={() => setGranularity(g)}
+                className={
+                  "rounded-full text-xs " +
+                  (granularity === g
+                    ? "bg-star-amber/20 text-star-amber ring-1 ring-star-amber/40"
+                    : "text-slate-300 hover:text-white")
+                }
               >
                 {g === "day" ? "日" : g === "week" ? "周" : "月"}
               </Button>
@@ -131,8 +137,10 @@ export function StatsPanel() {
                   dataKey="count"
                   name="次数"
                   stroke="#fbbf24"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: "#fbbf24" }}
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: "#fbbf24", stroke: "#0b0a1a", strokeWidth: 2 }}
+                  activeDot={{ r: 6, fill: "#f6d365" }}
+                  style={{ filter: "drop-shadow(0 0 6px rgba(251,191,36,0.5))" }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -141,9 +149,9 @@ export function StatsPanel() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+        <Card className="border-white/10 bg-white/5 backdrop-blur-xl">
           <CardHeader>
-            <CardTitle>分类分布</CardTitle>
+            <CardTitle className="font-hand text-xl text-paper">分类分布</CardTitle>
             <CardDescription>各类别的记录次数</CardDescription>
           </CardHeader>
           <CardContent>
@@ -182,9 +190,9 @@ export function StatsPanel() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-white/10 bg-white/5 backdrop-blur-xl">
           <CardHeader>
-            <CardTitle>高频时段</CardTitle>
+            <CardTitle className="font-hand text-xl text-paper">高频时段</CardTitle>
             <CardDescription>星期 × 小时 · 按用户时区</CardDescription>
           </CardHeader>
           <CardContent>
@@ -221,10 +229,10 @@ export function StatsPanel() {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-1 py-4">
+    <Card className="border-white/10 bg-white/5 text-center backdrop-blur-xl">
+      <CardContent className="flex flex-col gap-1 py-5">
         <span className="text-xs text-slate-400">{label}</span>
-        <span className="text-2xl font-bold text-amber-300">{value}</span>
+        <span className="text-3xl font-bold text-star-amber drop-shadow-sm">{value}</span>
       </CardContent>
     </Card>
   );

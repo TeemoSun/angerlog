@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@chinese-fonts/lxgwwenkai": "^3.0.0",
     "@fontsource-variable/noto-sans-sc": "^5.0.20",
     "@hookform/resolvers": "^5.9.1",
     "@radix-ui/react-dialog": "^1.1.4",

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-情绪瓶（angerlog）：把生气记录抽象为投入瓶中的小球，帮助觉察情绪规律。React 18 前端 + FastAPI 后端 + PostgreSQL，Docker 分发。设计决策以 `docs/设计文档.md` 为准，但**实现细节以代码为准**（README 仍写 Python 3.11，实际是 3.12；文档里的 `Secure` cookie 实际代码是 `secure=False`）。
+情绪瓶（angerlog）：把生气记录抽象为投入瓶中的小球，帮助觉察情绪规律。React 18 前端 + FastAPI 后端 + PostgreSQL，Docker 分发。设计决策以 `docs/设计文档.md` 为准，前端视觉风格以 `docs/美术风格指南.md` 为准，但**实现细节以代码为准**（README 仍写 Python 3.11，实际是 3.12；文档里的 `Secure` cookie 实际代码是 `secure=False`）。
 
 ## 目录结构与架构
 

@@ -63,6 +63,6 @@ describe("LogList 筛选", () => {
     render(
       <LogList logs={[]} onResolve={() => {}} onDelete={() => {}} meta={null} onPageChange={() => {}} />,
     );
-    expect(screen.getByText(/还没有记录/)).toBeInTheDocument();
+    expect(screen.getByText(/瓶子里还空着/)).toBeInTheDocument();
   });
 });

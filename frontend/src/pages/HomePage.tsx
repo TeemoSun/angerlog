@@ -105,14 +105,19 @@ export function HomePage() {
 
   return (
     <div className="relative z-10 flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🫙</span>
-            <h1 className="font-semibold tracking-wide">情绪瓶</h1>
+      <header className="sticky top-0 z-30 border-b border-white/5 bg-night-900/60 backdrop-blur-2xl">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+          <div className="flex items-center gap-2.5">
+            <span className="text-2xl drop-shadow-md">🫙</span>
+            <h1 className="font-hand text-2xl font-normal tracking-wide text-paper">情绪瓶</h1>
           </div>
           <TabBar active={tab} onChange={setTab} />
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="text-slate-300 hover:bg-white/5 hover:text-white"
+          >
             退出
           </Button>
         </div>
@@ -187,10 +192,10 @@ export function HomePage() {
 
 function SummaryTile({ label, value }: { label: string; value: string }) {
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center gap-1 py-4 text-center">
+    <Card className="border-white/10 bg-white/5 text-center backdrop-blur-xl">
+      <CardContent className="flex flex-col items-center gap-1 py-5 text-center">
         <span className="text-xs text-slate-400">{label}</span>
-        <span className="text-2xl font-bold text-amber-300">{value}</span>
+        <span className="text-3xl font-bold text-star-amber drop-shadow-sm">{value}</span>
       </CardContent>
     </Card>
   );

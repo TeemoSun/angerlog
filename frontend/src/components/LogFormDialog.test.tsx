@@ -25,7 +25,7 @@ describe("LogFormDialog", () => {
   it("空原因提交时显示校验错误", async () => {
     const user = userEvent.setup();
     renderDialog();
-    await user.click(screen.getByRole("button", { name: "投入瓶中" }));
+    await user.click(screen.getByRole("button", { name: "折成星星 ✨" }));
     expect(await screen.findByText(/请描述一下发生了什么/)).toBeInTheDocument();
   });
 
@@ -33,8 +33,7 @@ describe("LogFormDialog", () => {
     const user = userEvent.setup();
     renderDialog();
     expect(screen.queryByTestId("breathing-guide")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("slider"));
-    await user.keyboard("{End}");
+    await user.click(screen.getByTestId("mood-特别生气"));
     await waitFor(() => {
       expect(screen.getByTestId("high-intensity-hint")).toBeInTheDocument();
     });
@@ -44,8 +43,7 @@ describe("LogFormDialog", () => {
   it("强度<8 时无呼吸引导", async () => {
     const user = userEvent.setup();
     renderDialog();
-    await user.click(screen.getByRole("slider"));
-    await user.keyboard("{Home}");
+    await user.click(screen.getByTestId("mood-生气"));
     await waitFor(() => {
       expect(screen.queryByTestId("breathing-guide")).not.toBeInTheDocument();
     });
@@ -66,7 +64,7 @@ describe("LogFormDialog", () => {
       resolved_at: null,
     });
     await user.type(screen.getByLabelText("发生了什么？"), "堵车一小时");
-    await user.click(screen.getByRole("button", { name: "投入瓶中" }));
+    await user.click(screen.getByRole("button", { name: "折成星星 ✨" }));
     await waitFor(() => expect(mockCreate).toHaveBeenCalled());
     expect(mockCreate.mock.calls[0][0]).toMatchObject({
       trigger_reason: "堵车一小时",

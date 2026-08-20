@@ -15,14 +15,20 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { errorMessage } from "@/lib/api";
 import { createLogRequest } from "@/lib/requests";
 import type { Category, LogItem } from "@/lib/types";
-import { intensityColor, intensityDescription } from "@/lib/utils";
+import { intensityColor, intensityLabel } from "@/lib/utils";
 
 export const CATEGORIES: Category[] = ["工作", "家庭", "交通", "社交", "其他"];
+
+const INTENSITY_LEVELS = [
+  { value: 2, label: "生气" },
+  { value: 5, label: "很生气" },
+  { value: 7.5, valueSubmit: 8, label: "非常生气" },
+  { value: 9.5, valueSubmit: 10, label: "特别生气" },
+];
 
 const schema = z.object({
   trigger_reason: z
@@ -74,77 +80,103 @@ export function LogFormDialog({
     }
   };
 
+  const selectIntensity = (value: number) => setValue("intensity", value, { shouldValidate: true });
+
   return (
-    <Dialog open={open} onOpenChange={(o) => {
-      if (!o) reset();
-      onOpenChange(o);
-    }}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>扔一颗小球</DialogTitle>
-          <DialogDescription>记录此刻的生气，让情绪有处安放</DialogDescription>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) reset();
+        onOpenChange(o);
+      }}
+    >
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-paper-muted/50 bg-paper text-ink">
+        <DialogHeader className="text-center sm:text-left">
+          <DialogTitle className="font-hand text-2xl font-normal text-ink">今天的心情</DialogTitle>
+          <DialogDescription className="text-ink-light">
+            写下来，折成一颗星星投进瓶中
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" data-testid="log-form">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" data-testid="log-form">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="trigger_reason">发生了什么？</Label>
+            <Label htmlFor="trigger_reason" className="text-ink">发生了什么？</Label>
             <Textarea
               id="trigger_reason"
-              placeholder="例如：会议被临时取消，白等了一小时…"
+              placeholder="今天发生了什么……写下来，折成一颗星星。"
               maxLength={500}
               {...register("trigger_reason")}
               aria-invalid={!!errors.trigger_reason}
+              className="min-h-[100px] rounded-2xl border-paper-muted bg-white/70 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
             />
             {errors.trigger_reason && (
-              <p className="text-xs text-red-400" role="alert">
+              <p className="text-xs text-star-crimson" role="alert">
                 {errors.trigger_reason.message}
               </p>
             )}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="intensity">生气程度</Label>
-              <span className="flex items-center gap-2 text-sm font-semibold">
-                <span
-                  className="inline-block h-3 w-3 rounded-full"
-                  style={{ backgroundColor: intensityColor(intensity) }}
-                />
-                <span data-testid="intensity-value">{intensity}</span>/10
-                <span className="text-xs font-normal text-slate-400">
-                  {intensityDescription(intensity)}
-                </span>
-              </span>
+          <div className="flex flex-col gap-3">
+            <Label className="text-ink">生气程度</Label>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {INTENSITY_LEVELS.map((level) => {
+                const submitValue = level.valueSubmit ?? level.value;
+                const selected = intensity === submitValue;
+                return (
+                  <button
+                    key={level.label}
+                    type="button"
+                    onClick={() => selectIntensity(submitValue)}
+                    className={
+                      "flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition " +
+                      (selected
+                        ? "border-star-amber bg-star-amber/15 shadow-[0_0_18px_rgba(251,191,36,0.18)]"
+                        : "border-paper-muted bg-white/60 hover:border-star-amber/40")
+                    }
+                    data-testid={`mood-${level.label}`}
+                  >
+                    <svg width="32" height="32" viewBox="0 0 32 32" className="star-glow">
+                      <polygon
+                        points="16,2 19,12 30,12 21,19 24,30 16,23 8,30 11,19 2,12 13,12"
+                        fill={intensityColor(submitValue)}
+                        stroke="rgba(255,255,255,0.5)"
+                        strokeWidth="1"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium text-ink">{level.label}</span>
+                  </button>
+                );
+              })}
             </div>
-            <Slider
-              id="intensity"
-              min={1}
-              max={10}
-              step={1}
-              value={[intensity]}
-              onValueChange={([v]) => setValue("intensity", v)}
-              aria-label="生气程度"
-            />
+            <div className="flex items-center justify-center gap-2 text-sm text-ink-light">
+              <span
+                className="inline-block h-3 w-3 rounded-full"
+                style={{ backgroundColor: intensityColor(intensity) }}
+              />
+              <span data-testid="intensity-value">{intensity}</span>
+              /10
+              <span className="text-xs">{intensityLabel(intensity)}</span>
+            </div>
             {high && (
-              <p className="text-xs text-orange-300" role="alert" data-testid="high-intensity-hint">
+              <p className="text-xs text-star-orange" role="alert" data-testid="high-intensity-hint">
                 程度较高，试试下面的呼吸引导
               </p>
             )}
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="category">分类（可选）</Label>
+            <Label htmlFor="category" className="text-ink">分类（可选）</Label>
             <Select
               value={category ?? "none"}
               onValueChange={(v) => setValue("category", v === "none" ? null : v)}
             >
-              <SelectTrigger id="category">
+              <SelectTrigger id="category" className="rounded-xl border-paper-muted bg-white/70 text-ink focus:ring-star-amber/70">
                 <SelectValue placeholder="选择分类" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl border-paper-muted bg-paper">
                 <SelectItem value="none">不分类</SelectItem>
                 {CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>
+                  <SelectItem key={c} value={c} className="text-ink focus:bg-star-amber/10">
                     {c}
                   </SelectItem>
                 ))}
@@ -155,14 +187,18 @@ export function LogFormDialog({
           {high && <BreathingGuide active={open} />}
 
           {submitError && (
-            <p className="text-xs text-red-400" role="alert">
+            <p className="text-xs text-star-crimson" role="alert">
               {submitError}
             </p>
           )}
 
           <DialogFooter>
-            <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-              {isSubmitting ? "投入中…" : "投入瓶中"}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-full bg-gradient-to-r from-star-gold via-star-amber to-star-orange text-ink shadow-lg shadow-amber-900/20 transition hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-900/30 disabled:opacity-60 sm:w-auto"
+            >
+              {isSubmitting ? "投入中…" : "折成星星 ✨"}
             </Button>
           </DialogFooter>
         </form>

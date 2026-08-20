@@ -33,8 +33,14 @@ export function App() {
   }, []);
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#1a1440] to-amber-950 text-slate-100">
+      <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-b from-[#2a2258] via-[#15122b] to-[#0b0a1a] text-slate-100">
         <ParticleBackground />
+
+        {/* 装饰月亮 */}
+        <div className="pointer-events-none fixed -right-24 -top-24 z-0 h-72 w-72 rounded-full bg-amber-100/8 blur-3xl sm:h-96 sm:w-96" />
+        <div className="pointer-events-none fixed -right-12 -top-12 z-0 h-48 w-48 rounded-full bg-gradient-to-br from-amber-100/12 to-amber-300/5 blur-2xl sm:h-72 sm:w-72" />
+        <div className="pointer-events-none fixed bottom-0 left-0 z-0 h-40 w-full bg-gradient-to-t from-night-900/80 to-transparent" />
+
         <SessionExpiredListener />
         <Routes>
           <Route path="/login" element={<LoginPage />} />

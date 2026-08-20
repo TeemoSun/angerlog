@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   Dialog,
@@ -21,7 +20,7 @@ import { errorMessage } from "@/lib/api";
 import { deleteLogRequest, resolveLogRequest } from "@/lib/requests";
 import { useLogsStore } from "@/stores/logs";
 import type { LogItem } from "@/lib/types";
-import { formatDateTime, intensityColor } from "@/lib/utils";
+import { formatDateTime, intensityColor, intensityLabel } from "@/lib/utils";
 import { useState } from "react";
 
 export function ResolveDialog({
@@ -58,32 +57,43 @@ export function ResolveDialog({
 
   return (
     <Dialog open={!!log} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>标记为已解决</DialogTitle>
-          <DialogDescription>你是怎么让自己平静下来的？</DialogDescription>
+      <DialogContent className="border-paper-muted/50 bg-paper text-ink">
+        <DialogHeader className="text-center sm:text-left">
+          <DialogTitle className="font-hand text-2xl font-normal text-ink">写下消气原因</DialogTitle>
+          <DialogDescription className="text-ink-light">
+            情绪是怎么消解的？
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="resolution_method">解决办法</Label>
+          <Label htmlFor="resolution_method" className="text-ink">解决办法</Label>
           <Input
             id="resolution_method"
-            placeholder="例如：出去走了十分钟"
+            placeholder="写下这个情绪后来是怎么消失的…"
             maxLength={500}
             value={method}
             onChange={(e) => setMethod(e.target.value)}
+            className="rounded-xl border-paper-muted bg-white/70 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
           />
           {error && (
-            <p className="text-xs text-red-400" role="alert">
+            <p className="text-xs text-star-crimson" role="alert">
               {error}
             </p>
           )}
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            className="text-ink-light hover:bg-paper-muted hover:text-ink"
+          >
             取消
           </Button>
-          <Button onClick={submit} disabled={submitting}>
-            {submitting ? "保存中…" : "确认解决"}
+          <Button
+            onClick={submit}
+            disabled={submitting}
+            className="rounded-full bg-gradient-to-r from-star-gold via-star-amber to-star-orange text-ink shadow-lg shadow-amber-900/20"
+          >
+            {submitting ? "保存中…" : "保存"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -102,6 +112,7 @@ function LogCard({
 }) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const doDelete = async () => {
     setDeleting(true);
@@ -114,62 +125,134 @@ function LogCard({
     }
   };
 
+  const color = intensityColor(log.intensity);
+  const label = intensityLabel(log.intensity);
+
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-block h-4 w-4 shrink-0 rounded-full"
-            style={{ backgroundColor: intensityColor(log.intensity) }}
-            title={`程度 ${log.intensity}/10`}
-          />
-          <CardTitle className="text-sm font-semibold">
-            {log.intensity}/10
-          </CardTitle>
-          {log.category && <Badge>{log.category}</Badge>}
+    <Card className="relative overflow-hidden border-none bg-paper text-ink shadow-xl shadow-black/15">
+      {/* 左侧情绪色条 */}
+      <div
+        className="absolute left-0 top-0 h-full w-1.5"
+        style={{ backgroundColor: color }}
+      />
+
+      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pl-5 pt-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-white shadow-sm"
+            style={{ backgroundColor: color }}
+          >
+            <svg width="14" height="14" viewBox="0 0 32 32">
+              <polygon
+                points="16,3 19,12 29,12 21,18 24,28 16,22 8,28 11,18 3,12 13,12"
+                fill="currentColor"
+              />
+            </svg>
+            {label}
+          </div>
+          {log.category && (
+            <Badge className="rounded-full border-paper-muted bg-paper-muted text-ink-light">
+              {log.category}
+            </Badge>
+          )}
           {log.is_resolved && (
-            <Badge className="border-emerald-400/30 bg-emerald-500/15 text-emerald-300">
+            <Badge className="rounded-full border-emerald-400/30 bg-emerald-500/15 text-emerald-700">
               ✓ 已解决
             </Badge>
           )}
         </div>
-        <span className="text-xs text-slate-500">{formatDateTime(log.created_at)}</span>
+        <span className="text-xs text-ink-light/80">{formatDateTime(log.created_at)}</span>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2">
-        <p className="text-sm leading-relaxed text-slate-200">{log.trigger_reason}</p>
+
+      <CardContent className="flex flex-col gap-3 pl-5 pr-5 pb-5">
+        <p className="text-sm leading-relaxed text-ink">{log.trigger_reason}</p>
+
         {log.is_resolved && log.resolution_method && (
-          <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200/90">
-            解决方法：{log.resolution_method}
-          </p>
+          <div className="rounded-xl border border-emerald-300/30 bg-emerald-500/10 px-3 py-2.5">
+            <p className="mb-1 text-xs font-medium text-emerald-700">情绪是怎么消解的</p>
+            <p className="text-sm text-emerald-800/90">{log.resolution_method}</p>
+          </div>
         )}
+
         {log.resolved_at && (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-ink-light/70">
             解决于 {formatDateTime(log.resolved_at)}
           </p>
         )}
+
+        {/* 未解决时展开写消气原因 */}
+        {!log.is_resolved && expanded && (
+          <div className="flex flex-col gap-2 rounded-xl border border-paper-muted bg-white/60 p-3">
+            <Label htmlFor={`resolve-${log.id}`} className="text-xs text-ink-light">
+              情绪是怎么消解的
+            </Label>
+            <Input
+              id={`resolve-${log.id}`}
+              placeholder="写下这个情绪后来是怎么消失的…"
+              maxLength={500}
+              className="rounded-xl border-paper-muted bg-white/80 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setExpanded(false)}
+                className="text-ink-light hover:bg-paper-muted hover:text-ink"
+              >
+                取消
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => onResolve(log)}
+                className="rounded-full bg-gradient-to-r from-star-gold to-star-orange text-ink"
+              >
+                保存
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="mt-1 flex items-center gap-2">
-          {!log.is_resolved ? (
-            <Button size="sm" variant="secondary" onClick={() => onResolve(log)}>
-              标记解决
+          {!log.is_resolved && !expanded && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => onResolve(log)}
+              className="rounded-full bg-paper-muted text-ink hover:bg-paper-muted/80"
+            >
+              写下消气原因
             </Button>
-          ) : (
-            <span className="text-xs text-emerald-400/80">已解决 ✓</span>
+          )}
+          {log.is_resolved && (
+            <span className="text-xs text-emerald-600">已解决 ✓</span>
           )}
           {confirming ? (
             <div className="flex items-center gap-1">
-              <Button size="sm" variant="danger" onClick={doDelete} disabled={deleting}>
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={doDelete}
+                disabled={deleting}
+                className="rounded-full"
+              >
                 确认删除
               </Button>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => setConfirming(false)}
+                className="text-ink-light hover:bg-paper-muted hover:text-ink"
               >
                 取消
               </Button>
             </div>
           ) : (
-            <Button size="sm" variant="ghost" className="text-slate-400" onClick={() => setConfirming(true)}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-ink-light/70 hover:bg-paper-muted hover:text-ink"
+              onClick={() => setConfirming(true)}
+            >
               删除
             </Button>
           )}
@@ -196,15 +279,21 @@ export function LogList({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* 顶部标题 */}
+      <div className="mb-1 flex items-center gap-2">
+        <h2 className="font-hand text-2xl text-paper">瓶中信件</h2>
+        <span className="text-sm text-slate-400">写下消气原因，封存情绪</span>
+      </div>
+
       <div className="flex flex-wrap items-center gap-2">
         <Select
           value={filters.category ?? "all"}
           onValueChange={(v) => setFilter({ category: v === "all" ? null : v })}
         >
-          <SelectTrigger className="w-28">
+          <SelectTrigger className="w-28 rounded-full border-white/10 bg-white/5 text-slate-100 backdrop-blur-xl">
             <SelectValue placeholder="分类" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-xl border-white/10 bg-slate-900/95 text-slate-100 backdrop-blur-2xl">
             <SelectItem value="all">全部分类</SelectItem>
             {["工作", "家庭", "交通", "社交", "其他"].map((c) => (
               <SelectItem key={c} value={c}>
@@ -213,27 +302,29 @@ export function LogList({
             ))}
           </SelectContent>
         </Select>
+
         <Select
           value={filters.resolved}
           onValueChange={(v) => setFilter({ resolved: v as "all" | "resolved" | "unresolved" })}
         >
-          <SelectTrigger className="w-28">
+          <SelectTrigger className="w-28 rounded-full border-white/10 bg-white/5 text-slate-100 backdrop-blur-xl">
             <SelectValue placeholder="解决状态" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-xl border-white/10 bg-slate-900/95 text-slate-100 backdrop-blur-2xl">
             <SelectItem value="all">全部状态</SelectItem>
             <SelectItem value="resolved">已解决</SelectItem>
             <SelectItem value="unresolved">未解决</SelectItem>
           </SelectContent>
         </Select>
+
         <Select
           value={filters.intensityMin ? String(filters.intensityMin) : "all"}
           onValueChange={(v) => setFilter({ intensityMin: v === "all" ? null : Number(v) })}
         >
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32 rounded-full border-white/10 bg-white/5 text-slate-100 backdrop-blur-xl">
             <SelectValue placeholder="最低程度" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-xl border-white/10 bg-slate-900/95 text-slate-100 backdrop-blur-2xl">
             <SelectItem value="all">任意程度</SelectItem>
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
               <SelectItem key={n} value={String(n)}>
@@ -242,19 +333,25 @@ export function LogList({
             ))}
           </SelectContent>
         </Select>
-        <Button size="sm" variant="ghost" onClick={resetFilters}>
+
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={resetFilters}
+          className="rounded-full text-slate-300 hover:bg-white/5 hover:text-white"
+        >
           重置筛选
         </Button>
       </div>
 
       {logs.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-sm text-slate-400">
-            还没有记录，点击瓶口扔下第一颗小球吧
+        <Card className="border-white/10 bg-white/5 text-center backdrop-blur-xl">
+          <CardContent className="py-12 text-sm text-slate-400">
+            瓶子里还空着，先写一封信吧
           </CardContent>
         </Card>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {logs.map((log) => (
             <LogCard key={log.id} log={log} onResolve={onResolve} onDelete={onDelete} />
           ))}
@@ -272,6 +369,7 @@ export function LogList({
               variant="outline"
               disabled={meta.page <= 1}
               onClick={() => onPageChange(meta.page - 1)}
+              className="rounded-full border-white/10 bg-white/5 text-slate-100 hover:bg-white/10 disabled:opacity-40"
             >
               上一页
             </Button>
@@ -280,6 +378,7 @@ export function LogList({
               variant="outline"
               disabled={!meta.has_next}
               onClick={() => onPageChange(meta.page + 1)}
+              className="rounded-full border-white/10 bg-white/5 text-slate-100 hover:bg-white/10 disabled:opacity-40"
             >
               下一页
             </Button>
