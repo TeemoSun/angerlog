@@ -28,28 +28,21 @@
 
 需要：PostgreSQL（本地测试与开发均在 `localhost:54329`）、Python 3.12 + [uv](https://docs.astral.sh/uv/)、Node.js 20+。
 
-1. **准备数据库**：在 `54329` 端口启动一个 PostgreSQL，并创建用户和两个库：
+1. **准备环境变量**：从模板创建根目录 `.env`，修改 `DATABASE_URL`、`USERNAME`、`PASSWORD`、`SECRET_KEY`、`CSRF_SECRET`：
 
-   ```sql
-   CREATE USER app_user WITH PASSWORD 'testpass';
-   CREATE DATABASE emotion_bottle OWNER app_user;
-   CREATE DATABASE emotion_bottle_test OWNER app_user;  -- 测试用
+   ```bash
+   cp .env.example .env
    ```
 
 2. **启动后端**：
 
    ```bash
    cd backend
-   cp .env.example .env   # 修改 DATABASE_URL、USERNAME、PASSWORD_HASH、SECRET_KEY、CSRF_SECRET
    uv sync
    uv run uvicorn app.main:app --reload    # http://localhost:8000
    ```
 
-   首次启动会自动执行 Alembic 迁移并写入默认用户。`PASSWORD_HASH` 需为 bcrypt 哈希（cost=12），可用项目内命令生成：
-
-   ```bash
-   uv run python -c "from app.core.security import hash_password; print(hash_password('你的密码'))"
-   ```
+   首次启动会自动执行 Alembic 迁移并写入默认用户。`PASSWORD` 为明文密码，启动时自动 bcrypt 哈希（cost=12）后入库。
 
 3. **启动前端**（另开终端）：
 
@@ -79,10 +72,10 @@ cd frontend && npm run build                       # tsc -b && vite build
 2. **安装后端依赖并配置**：
 
    ```bash
-   cd backend
    cp .env.example .env
-   # 修改：DATABASE_URL 指向你的 PostgreSQL、USERNAME、PASSWORD_HASH、
+   # 修改：DATABASE_URL 指向你的 PostgreSQL、USERNAME、PASSWORD、
    #       SECRET_KEY、CSRF_SECRET、FRONTEND_DIST 指向 frontend/dist 的绝对路径
+   cd backend
    uv sync --no-dev
    ```
 
@@ -101,14 +94,10 @@ cd frontend && npm run build                       # tsc -b && vite build
 ### 1. 准备环境变量
 
 ```bash
-cp .env.example .env   # 必须修改 POSTGRES_PASSWORD、PASSWORD_HASH、SECRET_KEY、CSRF_SECRET
+cp .env.example .env   # 必须修改 POSTGRES_PASSWORD、PASSWORD、SECRET_KEY、CSRF_SECRET
 ```
 
-> 缺失或占位的必需变量会导致 `docker compose up` 直接报错退出。`PASSWORD_HASH` 需为 bcrypt 哈希（cost=12），可用项目内命令生成：
->
-> ```bash
-> cd backend && uv run python -c "from app.core.security import hash_password; print(hash_password('你的密码'))"
-> ```
+> 缺失或占位的必需变量会导致 `docker compose up` 直接报错退出。`PASSWORD` 为明文密码（如含特殊字符需转义或用引号包裹），启动时自动 bcrypt 哈希（cost=12）后入库。
 
 ### 2. 构建并启动
 

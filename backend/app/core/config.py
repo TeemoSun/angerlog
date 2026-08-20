@@ -1,18 +1,24 @@
 import re
 from functools import lru_cache
+from pathlib import Path
 
+import bcrypt
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _RATE_LIMIT_RE = re.compile(r"^(\d+)/(\d+)(minute|minutes|second|seconds|hour|hours)$")
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=str(PROJECT_ROOT / ".env"), env_file_encoding="utf-8", extra="ignore"
+    )
 
     DATABASE_URL: str
     USERNAME: str
-    PASSWORD_HASH: str
+    PASSWORD: str
     USER_TIMEZONE: str = "Asia/Shanghai"
     SECRET_KEY: str
     CSRF_SECRET: str
@@ -30,12 +36,9 @@ class Settings(BaseSettings):
             raise ValueError('LOGIN_RATE_LIMIT must be in "N/5minutes" format, e.g. "5/5minutes"')
         return v
 
-    @field_validator("PASSWORD_HASH")
-    @classmethod
-    def validate_password_hash(cls, v: str) -> str:
-        if not (v.startswith("$2a$") or v.startswith("$2b$") or v.startswith("$2y$")):
-            raise ValueError("PASSWORD_HASH must be a valid bcrypt hash starting with $2")
-        return v
+    @property
+    def password_hash(self) -> str:
+        return bcrypt.hashpw(self.PASSWORD.encode(), bcrypt.gensalt(12)).decode()
 
     @property
     def cors_origins_list(self) -> list[str]:

@@ -7,6 +7,7 @@
 - `backend/` — Python 3.12 + FastAPI + SQLAlchemy 2.0(async) + Alembic，**uv 管理**（非 pip）。分层：`app/api/v1`（路由）→ `app/services` → `app/repositories` → `app/models`；`app/core/` 为 config/database/security/dependencies/errors/response。迁移在 `backend/migrations/versions/`（当前仅 `0001_initial_schema`）。`[tool.uv] package = false`，导入按 `app.*` 路径。
 - `frontend/` — React 18 + TS + Vite 6 + **Tailwind v4**（`@import "tailwindcss"` + `@theme`，**没有 tailwind.config 文件**，无 Tailwind 插件，用 `@tailwindcss/postcss`）。shadcn 风格 UI 组件手写在 `src/components/ui/`；状态用 zustand（`src/stores/`），表单 react-hook-form + zod，动画 framer-motion，图表 recharts。
 - 仓库有 `docker-compose.yml`（生产部署：postgres + backend，根目录 `.env.example` 为配置模板；测试和本地 dev 不走 docker，postgres 需自己起（测试和本地 dev 都在 `localhost:54329`）。
+- `.env` 与 `.env.example` 在**仓库根目录**（docker compose 默认加载；后端 `config.py` 的 `env_file` 按仓库根目录绝对路径解析，本地 dev 无需复制，直接编辑根目录 `.env`）。
 
 ## 常用命令
 
@@ -34,7 +35,7 @@ npm run test         # vitest run，12 个用例（已全绿）
 
 - **测试必须连 PostgreSQL**：`tests/conftest.py` 硬编码 `postgresql+asyncpg://app_user:testpass@localhost:54329/emotion_bottle_test`（端口 54329，不是 5432）。conftest 直接 `Base.metadata.drop_all/create_all`（不走 Alembic），每用例后 TRUNCATE 三张表并重建用户。本机 54329 上需存在该库和 `app_user`，否则 pytest 直接失败。
 - 后端 `.env`（gitignored）里 `DATABASE_URL` 指向同一 54329 实例的 `emotion_bottle` 库，`FRONTEND_DIST` 指向本地 `frontend/dist`（容器内默认 `/app/frontend/dist`）。
-- 测试登录密码 `testpass123`，哈希在 conftest 中写死为 bcrypt cost=12。
+- 测试登录密码 `testpass123`，conftest 通过 `PASSWORD` 环境变量注入，密码哈希由 `settings.password_hash` 启动时计算（bcrypt cost=12）。
 - 速率限制器是**进程内滑动窗口**（`LoginRateLimiter`，按客户端 IP），重启即清零；写测试时注意 `login_limiter._attempts` 的清理（conftest 已处理）。
 
 ## 关键架构约定（写代码时易踩坑）
@@ -45,15 +46,15 @@ npm run test         # vitest run，12 个用例（已全绿）
 - **数据库时区**：`TIMESTAMPTZ` 一律存 UTC；趋势/热力图查询时用 `func.timezone(tz, ...)` + `date_trunc` / `EXTRACT(ISODOW/HOUR)` 按用户时区动态计算（`stats_repository.py`）。**不要加生成列**。星期用 ISO 语义（周一=1…周日=7）。
 - **软删除**：`anger_logs.is_deleted`，所有列表/统计查询默认 `is_deleted = FALSE`；`DELETE /logs/{id}` 只置 true。部分索引带 `postgresql_where` 部分索引条件。
 - **category 是枚举**：DB CHECK + Pydantic 校验都限定 `('工作','家庭','交通','社交','其他')`，存 `NULL` 合法。
-- **启动即迁移**：`app.main` lifespan 自动跑 Alembic 到 head + upsert 默认用户（`USERNAME`/`PASSWORD_HASH`/`USER_TIMEZONE`），Docker 不单独跑迁移。缺必需环境变量（`DATABASE_URL`/`USERNAME`/`PASSWORD_HASH`/`SECRET_KEY`/`CSRF_SECRET`）启动直接失败。
-- `PASSWORD_HASH` 必须是 bcrypt `$2a/$2b/$2y` 前缀的哈希（config 校验），cost=12；`LOGIN_RATE_LIMIT` 格式 `N/minutes`（如 `5/5minutes`）。
+- **启动即迁移**：`app.main` lifespan 自动跑 Alembic 到 head + upsert 默认用户（`USERNAME`/`PASSWORD`/`USER_TIMEZONE`），Docker 不单独跑迁移。缺必需环境变量（`DATABASE_URL`/`USERNAME`/`PASSWORD`/`SECRET_KEY`/`CSRF_SECRET`）启动直接失败。
+- `PASSWORD` 为**明文密码**（config 不再接受哈希），`settings.password_hash` 属性启动时用 bcrypt（cost=12）哈希后入库；`LOGIN_RATE_LIMIT` 格式 `N/minutes`（如 `5/5minutes`）。
 - **无 `/docs`**（`docs_url=None, redoc_url=None`）；健康检查是 `/health`（做 `SELECT 1`）。`/api/v1` 前缀：auth/logs/stats 三个 router。
 - 标记解决时同时更新 `updated_at` 并填 `resolved_at`；`intensity` CHECK 1-10。
 - **无 RSA/应用层加密、无 Nginx**：密码靠上层 TLS 明文传输，后端 bcrypt 比对（曾评审后移除，别再加回来）。
 
-## 环境变量（见 `backend/.env.example`）
+## 环境变量（见根目录 `.env.example`）
 
-`DATABASE_URL`、`USERNAME`、`PASSWORD_HASH`、`USER_TIMEZONE`、`SECRET_KEY`、`CSRF_SECRET`、`ACCESS_TOKEN_EXPIRE_MINUTES`、`REFRESH_TOKEN_EXPIRE_DAYS`、`LOGIN_RATE_LIMIT`、`CORS_ORIGINS`、`FRONTEND_DIST`（静态托管路径）。
+`DATABASE_URL`、`POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB`（仅 docker compose 的 db 服务）、`USERNAME`、`PASSWORD`、`USER_TIMEZONE`、`SECRET_KEY`、`CSRF_SECRET`、`ACCESS_TOKEN_EXPIRE_MINUTES`、`REFRESH_TOKEN_EXPIRE_DAYS`、`LOGIN_RATE_LIMIT`、`CORS_ORIGINS`、`FRONTEND_DIST`（静态托管路径）。
 
 ## Docker 打包上传
 

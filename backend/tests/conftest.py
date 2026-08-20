@@ -8,7 +8,7 @@ os.environ["DATABASE_URL"] = (
     "postgresql+asyncpg://app_user:testpass@localhost:54329/emotion_bottle_test"
 )
 os.environ["USERNAME"] = "admin"
-os.environ["PASSWORD_HASH"] = "$2b$12$1aQypYIBtBZ7y2q5ocedO.nIW22x4J7v6FgskK07vNqsLw8Gpbg76"
+os.environ["PASSWORD"] = "testpass123"
 os.environ["USER_TIMEZONE"] = "Asia/Shanghai"
 os.environ["SECRET_KEY"] = "test-secret-key-0123456789abcdef0123456789abcdef"
 os.environ["CSRF_SECRET"] = "test-csrf-secret-0123456789abcdef0123456789abcdef"
@@ -63,7 +63,7 @@ async def seed_user():
     settings = get_settings()
     async with AsyncSessionLocal() as db:
         await auth_repository.upsert_user(
-            db, settings.USERNAME, settings.PASSWORD_HASH, settings.USER_TIMEZONE
+            db, settings.USERNAME, settings.password_hash, settings.USER_TIMEZONE
         )
 
 

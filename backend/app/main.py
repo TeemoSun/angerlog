@@ -37,7 +37,7 @@ async def run_migrations() -> None:
 async def upsert_default_user() -> None:
     async with AsyncSessionLocal() as db:
         await auth_repository.upsert_user(
-            db, settings.USERNAME, settings.PASSWORD_HASH, settings.USER_TIMEZONE
+            db, settings.USERNAME, settings.password_hash, settings.USER_TIMEZONE
         )
 
 

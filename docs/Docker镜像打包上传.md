@@ -17,7 +17,7 @@
 - **Stage 2 `runtime`**：基于 `python:3.12-slim`，安装 `uv`（来自 `ghcr.io/astral-sh/uv:latest`），`uv sync --frozen --no-dev` 安装后端依赖，拷入后端代码与前端 `dist`，暴露 `8000` 端口，以 uvicorn 启动。
 
 > 注意：alembic 迁移由 `app.main.lifespan` 在容器启动时自动执行，Dockerfile 不单独运行迁移。
-> 镜像声明 `HEALTHCHECK`（探测 `/health`）；`SECRET_KEY` / `CSRF_SECRET` / `PASSWORD_HASH` 为空或占位值时容器启动直接报错退出。
+> 镜像声明 `HEALTHCHECK`（探测 `/health`）；`SECRET_KEY` / `CSRF_SECRET` / `PASSWORD` 为空或占位值时容器启动直接报错退出。
 
 ## tag 命名规范
 
@@ -95,7 +95,7 @@ curl -s -o /dev/null -w "%{http_code}\n" \
 本项目需配合 PostgreSQL 数据库（见 `docker-compose.yml`）。默认端口 `8000`：
 
 ```bash
-cp .env.example .env   # 修改 USERNAME、PASSWORD_HASH、SECRET_KEY、CSRF_SECRET、POSTGRES_PASSWORD 等
+cp .env.example .env   # 修改 USERNAME、PASSWORD、SECRET_KEY、CSRF_SECRET、POSTGRES_PASSWORD 等
 
 # 方式一：docker compose（自动构建镜像并带起 postgres + backend）
 docker compose up -d --build
