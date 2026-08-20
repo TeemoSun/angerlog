@@ -6,7 +6,7 @@
 
 - `backend/` — Python 3.12 + FastAPI + SQLAlchemy 2.0(async) + Alembic，**uv 管理**（非 pip）。分层：`app/api/v1`（路由）→ `app/services` → `app/repositories` → `app/models`；`app/core/` 为 config/database/security/dependencies/errors/response。迁移在 `backend/migrations/versions/`（当前仅 `0001_initial_schema`）。`[tool.uv] package = false`，导入按 `app.*` 路径。
 - `frontend/` — React 18 + TS + Vite 6 + **Tailwind v4**（`@import "tailwindcss"` + `@theme`，**没有 tailwind.config 文件**，无 Tailwind 插件，用 `@tailwindcss/postcss`）。shadcn 风格 UI 组件手写在 `src/components/ui/`；状态用 zustand（`src/stores/`），表单 react-hook-form + zod，动画 framer-motion，图表 recharts。
-- 仓库**没有 compose 文件**（`docs/Docker镜像打包上传.md` 提到 `docker-compose.yml` 但尚未落地）；postgres 需自己起（测试和本地 dev 都在 `localhost:54329`）。
+- 仓库有 `docker-compose.yml`（生产部署：postgres + backend，根目录 `.env.example` 为配置模板；测试和本地 dev 不走 docker，postgres 需自己起（测试和本地 dev 都在 `localhost:54329`）。
 
 ## 常用命令
 

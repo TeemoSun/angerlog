@@ -94,62 +94,48 @@ cd frontend && npm run build                       # tsc -b && vite build
 
    生产环境建议用 systemd / supervisor 托管该进程，前方由 Nginx 等反向代理提供 HTTPS。
 
-## Docker 部署
+## Docker 部署（docker compose）
 
-镜像构建与上传见 [`docs/Docker镜像打包上传.md`](docs/Docker镜像打包上传.md)；已构建镜像可直接拉取：
+镜像构建与上传见 [`docs/Docker镜像打包上传.md`](docs/Docker镜像打包上传.md)；compose 配置会直接构建本地代码（`docker-compose.yml` 含 `build`），无需预先拉取镜像。
 
-```bash
-docker pull pigzho/angerlog:latest
-```
-
-### 方式一：docker run（自带 postgres 容器）
+### 1. 准备环境变量
 
 ```bash
-# 1. 先起 PostgreSQL 并建库（示例密码自行修改）
-docker run -d --name angerlog-pg \
-  -e POSTGRES_USER=app_user \
-  -e POSTGRES_PASSWORD=testpass \
-  -e POSTGRES_DB=emotion_bottle \
-  -p 54329:5432 \
-  -v angerlog-pgdata:/var/lib/postgresql/data \
-  postgres:15-alpine
-
-# 2. 准备环境变量文件（参考 backend/.env.example）
-cat > angerlog.env <<'EOF'
-DATABASE_URL=postgresql+asyncpg://app_user:testpass@localhost:54329/emotion_bottle
-USERNAME=admin
-PASSWORD_HASH=<bcrypt 哈希，cost=12>
-USER_TIMEZONE=Asia/Shanghai
-SECRET_KEY=<随机长字符串>
-CSRF_SECRET=<随机长字符串>
-ACCESS_TOKEN_EXPIRE_MINUTES=15
-REFRESH_TOKEN_EXPIRE_DAYS=30
-LOGIN_RATE_LIMIT=5/5minutes
-CORS_ORIGINS=http://localhost:8000
-FRONTEND_DIST=/app/frontend/dist
-EOF
-
-# 3. 启动应用（注意：容器内连宿主机的 postgres 需用 host 网络或改为容器网络）
-docker run -d --name angerlog --network host --env-file angerlog.env pigzho/angerlog:latest
+cp .env.example .env   # 必须修改 POSTGRES_PASSWORD、PASSWORD_HASH、SECRET_KEY、CSRF_SECRET
 ```
 
-> 说明：示例用 `--network host` 简化容器间数据库访问；若不用 host 网络，请把 `DATABASE_URL` 的 host 改为 postgres 容器名，并让两个容器在同一自定义 network 中。启动时容器会自动执行 Alembic 迁移并 upsert 默认用户；`SECRET_KEY`/`CSRF_SECRET`/`PASSWORD_HASH` 为空或占位值时容器启动直接退出。
+> 缺失或占位的必需变量会导致 `docker compose up` 直接报错退出。`PASSWORD_HASH` 需为 bcrypt 哈希（cost=12），可用项目内命令生成：
+>
+> ```bash
+> cd backend && uv run python -c "from app.core.security import hash_password; print(hash_password('你的密码'))"
+> ```
 
-### 方式二：docker run（复用已有的 PostgreSQL）
+### 2. 构建并启动
 
 ```bash
-docker run -d --name angerlog \
-  -p 8000:8000 \
-  --env-file angerlog.env \
-  pigzho/angerlog:latest
+docker compose up -d --build    # 构建镜像并启动 postgres + backend
+docker compose ps               # 查看状态（db 健康后 backend 才会启动）
 ```
 
-其中 `angerlog.env` 的 `DATABASE_URL` 指向你现有的 PostgreSQL 实例。
+- PostgreSQL 数据保存在命名卷 `angerlog_pgdata`，`docker compose down` 不会丢失数据；如需重置数据可 `docker compose down -v`。
+- backend 启动时自动执行 Alembic 迁移并 upsert 默认用户，无需手动建库。
 
-### 验证
+### 3. 验证
 
 ```bash
 curl http://localhost:8000/health        # 期望 {"status":"ok"}
 ```
 
-打开 `http://localhost:8000/` 即可使用。
+打开 `http://localhost:8000/` 即可使用。前端由后端静态托管，默认使用 `http://localhost:8000` 访问（如需域名，修改 `.env` 中 `CORS_ORIGINS` 并重建）。
+
+### 其他常用命令
+
+```bash
+docker compose logs -f backend   # 查看后端日志
+docker compose down              # 停止（保留数据卷）
+docker compose up -d             # 之后启动（免 build）
+```
+
+### 复用已有的 PostgreSQL
+
+只需在 `.env` 中提供远端实例的 `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB`，然后移除 `docker-compose.yml` 中的 `db` 服务与 `DATABASE_URL` 中的 `@db:5432` 改为你的地址（或直接为 `backend` 服务单独设置 `DATABASE_URL` 环境变量覆盖）。

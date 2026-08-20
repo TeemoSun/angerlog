@@ -95,10 +95,10 @@ curl -s -o /dev/null -w "%{http_code}\n" \
 本项目需配合 PostgreSQL 数据库（见 `docker-compose.yml`）。默认端口 `8000`：
 
 ```bash
-cp .env.example .env   # 修改 USERNAME、PASSWORD_HASH、SECRET_KEY、CSRF_SECRET、DB_PASSWORD 等
+cp .env.example .env   # 修改 USERNAME、PASSWORD_HASH、SECRET_KEY、CSRF_SECRET、POSTGRES_PASSWORD 等
 
-# 方式一：docker compose（自动带起 postgres + backend）
-docker compose up -d
+# 方式一：docker compose（自动构建镜像并带起 postgres + backend）
+docker compose up -d --build
 
 # 方式二：docker run（需自行准备可达的 PostgreSQL）
 docker run -d \
@@ -107,7 +107,7 @@ docker run -d \
   pigzho/angerlog:latest
 ```
 
-完整使用说明见 `README.md`。
+`docker-compose.yml` 中的 `build` 会直接构建本地代码（`Dockerfile`），不依赖已推送的镜像；也可改为 `image: pigzho/angerlog:latest` 直接使用远程镜像（需自行提供可达的 PostgreSQL）。完整使用说明见 `README.md`。
 
 ## 一键脚本参考
 
