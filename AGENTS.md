@@ -10,6 +10,17 @@
 - `frontend/` — React 18 + TS + Vite + shadcn/ui + Tailwind。构建 `tsc -b && vite build`，产物 `frontend/dist/` 由后端生产环境静态托管。
 - 后端开发与前端开发分开跑；`docker compose up -d` 跑全栈（postgres + backend）。
 
+## 后端依赖（uv）
+
+`backend/pyproject.toml` 已落地（非 `app/` 代码，先把依赖固定下来）。要点：
+
+- 运行依赖：`fastapi`、`uvicorn[standard]`、`sqlalchemy[asyncio]`、`alembic`、**`asyncpg`**（异步 PG 驱动，连接串 `postgresql+asyncpg://`，**不要用 psycopg**）、`pydantic-settings`、`pyjwt`、`bcrypt`（直接用，非 passlib）、`python-multipart`（表单/文件）。
+- 开发依赖（dependency-groups `dev`）：`pytest`、`pytest-asyncio`（`asyncio_mode = "auto"`）、`httpx`（AsyncClient 测试）、`ruff`、`mypy`。
+- 无 `gunicorn`（Dockerfile 直接 uvicorn 启动）、无 `cryptography`（无 RSA）、无 `apscheduler`（无定时任务）。
+- `[tool.uv] package = false` —— 非打包项目，导入按 `app.*` 路径。
+- 常用命令（在 `backend/` 下）：`uv sync`（装依赖并生成 `uv.lock`）、`uv sync --no-dev`（生产/Docker）、`uv add <pkg>`、`uv run uvicorn app.main:app --reload`、`uv run pytest`、`uv run ruff check app`、`uv run mypy app`。
+- 改 `pyproject.toml` 后必须 `uv sync` 更新 `uv.lock`；Docker 用 `uv sync --frozen`，锁不同步会构建失败。
+
 ## Docker 打包上传（已落地，必读）
 
 详见 `docs/Docker镜像打包上传.md`，一键脚本 `scripts/docker-push.sh`。要点：
