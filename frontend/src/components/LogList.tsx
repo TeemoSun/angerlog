@@ -103,16 +103,18 @@ export function ResolveDialog({
 
 function LogCard({
   log,
-  onResolve,
+  onResolved,
   onDelete,
 }: {
   log: LogItem;
-  onResolve: (log: LogItem) => void;
+  onResolved?: (log: LogItem) => void;
   onDelete: (id: string) => void;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [method, setMethod] = useState("");
+  const [savingInline, setSavingInline] = useState(false);
 
   const doDelete = async () => {
     setDeleting(true);
@@ -190,23 +192,40 @@ function LogCard({
               id={`resolve-${log.id}`}
               placeholder="写下这个情绪后来是怎么消失的…"
               maxLength={500}
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
               className="rounded-xl border-paper-muted bg-white/80 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
             />
             <div className="flex justify-end gap-2">
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setExpanded(false)}
+                onClick={() => {
+                  setExpanded(false);
+                  setMethod("");
+                }}
                 className="text-ink-light hover:bg-paper-muted hover:text-ink"
               >
                 取消
               </Button>
               <Button
                 size="sm"
-                onClick={() => onResolve(log)}
+                onClick={async () => {
+                  if (!method.trim()) return;
+                  setSavingInline(true);
+                  try {
+                    const updated = await resolveLogRequest(log.id, method.trim());
+                    onResolved?.(updated);
+                    setMethod("");
+                    setExpanded(false);
+                  } finally {
+                    setSavingInline(false);
+                  }
+                }}
+                disabled={savingInline}
                 className="rounded-full bg-gradient-to-r from-star-gold to-star-orange text-ink"
               >
-                保存
+                {savingInline ? "保存中…" : "保存"}
               </Button>
             </div>
           </div>
@@ -217,7 +236,7 @@ function LogCard({
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => onResolve(log)}
+              onClick={() => setExpanded(true)}
               className="rounded-full bg-paper-muted text-ink hover:bg-paper-muted/80"
             >
               写下消气原因
@@ -353,7 +372,7 @@ export function LogList({
       ) : (
         <div className="flex flex-col gap-4">
           {logs.map((log) => (
-            <LogCard key={log.id} log={log} onResolve={onResolve} onDelete={onDelete} />
+            <LogCard key={log.id} log={log} onResolved={onResolve} onDelete={onDelete} />
           ))}
         </div>
       )}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,11 @@ export function ResolveDialog({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    setMethod("");
+    setError("");
+  }, [log?.id]);
+
   const submit = async () => {
     if (!log) return;
     if (!method.trim()) {
@@ -38,6 +43,7 @@ export function ResolveDialog({
     setSubmitting(true);
     try {
       const updated = await resolveLogRequest(log.id, method.trim());
+      setMethod("");
       onResolved(updated);
       onClose();
     } catch (err) {
@@ -49,32 +55,47 @@ export function ResolveDialog({
 
   return (
     <Dialog open={!!log} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>标记为已解决</DialogTitle>
-          <DialogDescription>你是怎么让自己平静下来的？</DialogDescription>
+      <DialogContent className="border-paper-muted/50 bg-paper text-ink">
+        <DialogHeader className="text-center sm:text-left">
+          <DialogTitle className="font-hand text-2xl font-normal text-ink">
+            写下消气原因
+          </DialogTitle>
+          <DialogDescription className="text-ink-light">
+            情绪是怎么消解的？
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="resolution_method">解决办法</Label>
+          <Label htmlFor="resolution_method" className="text-ink">
+            解决办法
+          </Label>
           <Input
             id="resolution_method"
-            placeholder="例如：出去走了十分钟"
+            placeholder="写下这个情绪后来是怎么消失的…"
             maxLength={500}
             value={method}
             onChange={(e) => setMethod(e.target.value)}
+            className="rounded-xl border-paper-muted bg-white/70 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
           />
           {error && (
-            <p className="text-xs text-red-400" role="alert">
+            <p className="text-xs text-star-crimson" role="alert">
               {error}
             </p>
           )}
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            className="text-ink-light hover:bg-paper-muted hover:text-ink"
+          >
             取消
           </Button>
-          <Button onClick={submit} disabled={submitting}>
-            {submitting ? "保存中…" : "确认解决"}
+          <Button
+            onClick={submit}
+            disabled={submitting}
+            className="rounded-full bg-gradient-to-r from-star-gold via-star-amber to-star-orange text-ink shadow-lg shadow-amber-900/20"
+          >
+            {submitting ? "保存中…" : "保存"}
           </Button>
         </DialogFooter>
       </DialogContent>
