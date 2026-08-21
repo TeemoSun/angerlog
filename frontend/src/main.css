@@ -28,6 +28,12 @@
   --color-glass: rgba(255, 255, 255, 0.08);
   --color-glass-border: rgba(255, 255, 255, 0.15);
   --color-glass-strong: rgba(255, 255, 255, 0.12);
+
+  /* 暖米白 / 奶驼色（低饱和中性，替代纯白纯黑） */
+  --color-milk: #f6efe3;
+  --color-milk-dim: #c9bfa8;
+  --color-camel: #d9c49e;
+  --color-camel-hover: #e2d1af;
 }
 
 .font-hand {

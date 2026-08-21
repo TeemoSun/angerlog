@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { RoundedStar } from "@/components/Star";
 import {
   Card,
   CardContent,
@@ -72,7 +73,7 @@ export function ResolveDialog({
             maxLength={500}
             value={method}
             onChange={(e) => setMethod(e.target.value)}
-            className="rounded-xl border-paper-muted bg-white/70 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
+            className="rounded-xl border-paper-muted/70 bg-white/60 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
           />
           {error && (
             <p className="text-xs text-star-crimson" role="alert">
@@ -91,7 +92,7 @@ export function ResolveDialog({
           <Button
             onClick={submit}
             disabled={submitting}
-            className="rounded-full bg-gradient-to-r from-star-gold via-star-amber to-star-orange text-ink shadow-lg shadow-amber-900/20"
+            className="rounded-full bg-gradient-to-r from-star-gold via-star-amber to-star-orange text-white shadow-lg shadow-amber-900/20"
           >
             {submitting ? "保存中…" : "保存"}
           </Button>
@@ -132,9 +133,9 @@ function LogCard({
 
   return (
     <Card className="relative overflow-hidden border-none bg-paper text-ink shadow-xl shadow-black/15">
-      {/* 左侧情绪色条 */}
+      {/* 左侧情绪色条（圆角收尾） */}
       <div
-        className="absolute left-0 top-0 h-full w-1.5"
+        className="absolute left-0 top-2.5 bottom-2.5 w-1.5 rounded-full"
         style={{ backgroundColor: color }}
       />
 
@@ -144,12 +145,7 @@ function LogCard({
             className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-white shadow-sm"
             style={{ backgroundColor: color }}
           >
-            <svg width="14" height="14" viewBox="0 0 32 32">
-              <polygon
-                points="16,3 19,12 29,12 21,18 24,28 16,22 8,28 11,18 3,12 13,12"
-                fill="currentColor"
-              />
-            </svg>
+            <RoundedStar size={14} color="#ffffff" />
             {label}
           </div>
           {log.category && (
@@ -158,7 +154,7 @@ function LogCard({
             </Badge>
           )}
           {log.is_resolved && (
-            <Badge className="rounded-full border-emerald-400/30 bg-emerald-500/15 text-emerald-700">
+            <Badge className="rounded-full border-star-amber/30 bg-star-gold/15 text-amber-800">
               ✓ 已解决
             </Badge>
           )}
@@ -170,9 +166,9 @@ function LogCard({
         <p className="text-sm leading-relaxed text-ink">{log.trigger_reason}</p>
 
         {log.is_resolved && log.resolution_method && (
-          <div className="rounded-xl border border-emerald-300/30 bg-emerald-500/10 px-3 py-2.5">
-            <p className="mb-1 text-xs font-medium text-emerald-700">情绪是怎么消解的</p>
-            <p className="text-sm text-emerald-800/90">{log.resolution_method}</p>
+          <div className="rounded-xl border border-star-amber/20 bg-star-gold/10 px-3 py-2.5">
+            <p className="mb-1 text-xs font-medium text-amber-700">情绪是怎么消解的</p>
+            <p className="text-sm text-amber-800/90">{log.resolution_method}</p>
           </div>
         )}
 
@@ -194,7 +190,7 @@ function LogCard({
               maxLength={500}
               value={method}
               onChange={(e) => setMethod(e.target.value)}
-              className="rounded-xl border-paper-muted bg-white/80 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
+              className="rounded-xl border-paper-muted/70 bg-white/80 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
             />
             <div className="flex justify-end gap-2">
               <Button
@@ -223,7 +219,7 @@ function LogCard({
                   }
                 }}
                 disabled={savingInline}
-                className="rounded-full bg-gradient-to-r from-star-gold to-star-orange text-ink"
+                className="rounded-full bg-gradient-to-r from-star-gold to-star-orange text-white"
               >
                 {savingInline ? "保存中…" : "保存"}
               </Button>
@@ -243,7 +239,7 @@ function LogCard({
             </Button>
           )}
           {log.is_resolved && (
-            <span className="text-xs text-emerald-600">已解决 ✓</span>
+            <span className="text-xs text-amber-600">已解决 ✓</span>
           )}
           {confirming ? (
             <div className="flex items-center gap-1">
@@ -301,7 +297,7 @@ export function LogList({
       {/* 顶部标题 */}
       <div className="mb-1 flex items-center gap-2">
         <h2 className="font-hand text-2xl text-paper">瓶中信件</h2>
-        <span className="text-sm text-slate-400">写下消气原因，封存情绪</span>
+        <span className="text-sm text-milk-dim">写下消气原因，封存情绪</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -309,10 +305,10 @@ export function LogList({
           value={filters.category ?? "all"}
           onValueChange={(v) => setFilter({ category: v === "all" ? null : v })}
         >
-          <SelectTrigger className="w-28 rounded-full border-white/10 bg-white/5 text-slate-100 backdrop-blur-xl">
+          <SelectTrigger className="w-28 rounded-full border-glass-border bg-glass text-milk backdrop-blur-xl">
             <SelectValue placeholder="分类" />
           </SelectTrigger>
-          <SelectContent className="rounded-xl border-white/10 bg-slate-900/95 text-slate-100 backdrop-blur-2xl">
+          <SelectContent className="rounded-xl border-white/10 bg-night-800/95 text-milk backdrop-blur-2xl">
             <SelectItem value="all">全部分类</SelectItem>
             {["工作", "家庭", "交通", "社交", "其他"].map((c) => (
               <SelectItem key={c} value={c}>
@@ -326,10 +322,10 @@ export function LogList({
           value={filters.resolved}
           onValueChange={(v) => setFilter({ resolved: v as "all" | "resolved" | "unresolved" })}
         >
-          <SelectTrigger className="w-28 rounded-full border-white/10 bg-white/5 text-slate-100 backdrop-blur-xl">
+          <SelectTrigger className="w-28 rounded-full border-glass-border bg-glass text-milk backdrop-blur-xl">
             <SelectValue placeholder="解决状态" />
           </SelectTrigger>
-          <SelectContent className="rounded-xl border-white/10 bg-slate-900/95 text-slate-100 backdrop-blur-2xl">
+          <SelectContent className="rounded-xl border-white/10 bg-night-800/95 text-milk backdrop-blur-2xl">
             <SelectItem value="all">全部状态</SelectItem>
             <SelectItem value="resolved">已解决</SelectItem>
             <SelectItem value="unresolved">未解决</SelectItem>
@@ -340,10 +336,10 @@ export function LogList({
           value={filters.intensityMin ? String(filters.intensityMin) : "all"}
           onValueChange={(v) => setFilter({ intensityMin: v === "all" ? null : Number(v) })}
         >
-          <SelectTrigger className="w-32 rounded-full border-white/10 bg-white/5 text-slate-100 backdrop-blur-xl">
+          <SelectTrigger className="w-32 rounded-full border-glass-border bg-glass text-milk backdrop-blur-xl">
             <SelectValue placeholder="最低程度" />
           </SelectTrigger>
-          <SelectContent className="rounded-xl border-white/10 bg-slate-900/95 text-slate-100 backdrop-blur-2xl">
+          <SelectContent className="rounded-xl border-white/10 bg-night-800/95 text-milk backdrop-blur-2xl">
             <SelectItem value="all">任意程度</SelectItem>
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
               <SelectItem key={n} value={String(n)}>
@@ -357,15 +353,15 @@ export function LogList({
           size="sm"
           variant="ghost"
           onClick={resetFilters}
-          className="rounded-full text-slate-300 hover:bg-white/5 hover:text-white"
+          className="rounded-full text-milk-dim hover:bg-white/5 hover:text-milk"
         >
           重置筛选
         </Button>
       </div>
 
       {logs.length === 0 ? (
-        <Card className="border-white/10 bg-white/5 text-center backdrop-blur-xl">
-          <CardContent className="py-12 text-sm text-slate-400">
+        <Card className="border-glass-border bg-glass text-center backdrop-blur-xl">
+          <CardContent className="py-12 text-sm text-milk-dim">
             瓶子里还空着，先写一封信吧
           </CardContent>
         </Card>
@@ -378,7 +374,7 @@ export function LogList({
       )}
 
       {meta && meta.total > 0 && (
-        <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="flex items-center justify-between text-xs text-milk-dim">
           <span>
             共 {meta.total} 条 · 第 {meta.page} 页
           </span>
@@ -388,7 +384,7 @@ export function LogList({
               variant="outline"
               disabled={meta.page <= 1}
               onClick={() => onPageChange(meta.page - 1)}
-              className="rounded-full border-white/10 bg-white/5 text-slate-100 hover:bg-white/10 disabled:opacity-40"
+              className="rounded-full border-glass-border bg-glass text-milk hover:bg-glass-strong disabled:opacity-40"
             >
               上一页
             </Button>
@@ -397,7 +393,7 @@ export function LogList({
               variant="outline"
               disabled={!meta.has_next}
               onClick={() => onPageChange(meta.page + 1)}
-              className="rounded-full border-white/10 bg-white/5 text-slate-100 hover:bg-white/10 disabled:opacity-40"
+              className="rounded-full border-glass-border bg-glass text-milk hover:bg-glass-strong disabled:opacity-40"
             >
               下一页
             </Button>

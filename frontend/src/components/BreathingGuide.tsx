@@ -38,8 +38,7 @@ export function BreathingGuide({ active }: { active: boolean }) {
     <div
       className="flex flex-col items-center gap-3 rounded-2xl border border-star-amber/20 bg-gradient-to-b from-star-gold/10 to-star-amber/10 p-4 text-amber-900/80"
       data-testid="breathing-guide"
-    >
-      <div className="relative flex h-28 w-28 items-center justify-center">
+    >      <div className="relative flex h-28 w-28 items-center justify-center">
         <motion.div
           className="absolute inset-0 rounded-full border-2 border-star-amber/40"
           animate={{

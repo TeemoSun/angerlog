@@ -74,7 +74,7 @@ export function ResolveDialog({
             maxLength={500}
             value={method}
             onChange={(e) => setMethod(e.target.value)}
-            className="rounded-xl border-paper-muted bg-white/70 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
+            className="rounded-xl border-paper-muted/70 bg-white/60 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
           />
           {error && (
             <p className="text-xs text-star-crimson" role="alert">
@@ -93,7 +93,7 @@ export function ResolveDialog({
           <Button
             onClick={submit}
             disabled={submitting}
-            className="rounded-full bg-gradient-to-r from-star-gold via-star-amber to-star-orange text-ink shadow-lg shadow-amber-900/20"
+            className="rounded-full bg-gradient-to-r from-star-gold via-star-amber to-star-orange text-white shadow-lg shadow-amber-900/20"
           >
             {submitting ? "保存中…" : "保存"}
           </Button>

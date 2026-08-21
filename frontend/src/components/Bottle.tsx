@@ -1,8 +1,12 @@
 import { motion } from "framer-motion";
 
+import { RoundedStar } from "@/components/Star";
 import { intensityColor } from "@/lib/utils";
 
 export const WATER_MAX_COUNT = 30;
+
+export const BOTTLE_SHAPE_PATH =
+  "M85 18 h30 v38 c0 8 8 12 20 14 c26 4 42 18 42 40 v135 c0 22 -18 40 -40 40 h-54 c-22 0 -40 -18 -40 -40 v-135 c0 -22 16 -36 42 -40 c12 -2 20 -6 20 -14 v-38z";
 
 export function waterLevelPercent(count: number): number {
   const capped = Math.min(count, WATER_MAX_COUNT);
@@ -17,24 +21,7 @@ function ballPosition(index: number): { x: number; y: number; r: number } {
   const col = index % COLS;
   const x = 58 + col * 27 + (row % 2) * 13;
   const y = 268 - row * 30;
-  return { x, y, r: 10 };
-}
-
-function StarShape({ cx, cy, r, fill }: { cx: number; cy: number; r: number; fill: string }) {
-  const points = [];
-  for (let i = 0; i < 10; i++) {
-    const angle = (Math.PI / 5) * i - Math.PI / 2;
-    const radius = i % 2 === 0 ? r : r * 0.45;
-    points.push(`${cx + Math.cos(angle) * radius},${cy + Math.sin(angle) * radius}`);
-  }
-  return (
-    <polygon
-      points={points.join(" ")}
-      fill={fill}
-      stroke="rgba(255,255,255,0.7)"
-      strokeWidth="1"
-    />
-  );
+  return { x, y, r: 9 };
 }
 
 export function Bottle({
@@ -64,20 +51,20 @@ export function Bottle({
         >
           <defs>
             <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f6d365" stopOpacity="0.5" />
-              <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.65" />
-              <stop offset="100%" stopColor="#f97316" stopOpacity="0.8" />
+              <stop offset="0%" stopColor="#f6d365" stopOpacity="0.45" />
+              <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#fb923c" stopOpacity="0.75" />
             </linearGradient>
             <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.28" />
-              <stop offset="40%" stopColor="#ffffff" stopOpacity="0.05" />
-              <stop offset="70%" stopColor="#ffffff" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.22" />
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
+              <stop offset="35%" stopColor="#ffffff" stopOpacity="0.04" />
+              <stop offset="65%" stopColor="#ffffff" stopOpacity="0.06" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.14" />
             </linearGradient>
             <linearGradient id="corkGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#c49a6c" />
-              <stop offset="50%" stopColor="#a67c52" />
-              <stop offset="100%" stopColor="#8b6f47" />
+              <stop offset="0%" stopColor="#d4ab7c" />
+              <stop offset="50%" stopColor="#b98d5f" />
+              <stop offset="100%" stopColor="#9d7a52" />
             </linearGradient>
             <filter id="starGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
@@ -87,19 +74,20 @@ export function Bottle({
               </feMerge>
             </filter>
             <clipPath id="bottleClip">
-              <path d="M85 18 h30 v38 a0 0 0 0 1 0 0 c0 8 8 12 20 14 c26 4 42 18 42 40 v135 c0 22 -18 40 -40 40 h-54 c-22 0 -40 -18 -40 -40 v-135 c0 -22 16 -36 42 -40 c12 -2 20 -6 20 -14 v-38z" />
+              <path d={BOTTLE_SHAPE_PATH} />
             </clipPath>
           </defs>
 
           {/* 瓶底阴影 */}
-          <ellipse cx="100" cy="305" rx="52" ry="8" fill="rgba(0,0,0,0.35)" />
+          <ellipse cx="100" cy="305" rx="52" ry="8" fill="rgba(0,0,0,0.3)" />
 
           {/* 瓶身轮廓 */}
           <path
-            d="M85 18 h30 v38 c0 8 8 12 20 14 c26 4 42 18 42 40 v135 c0 22 -18 40 -40 40 h-54 c-22 0 -40 -18 -40 -40 v-135 c0 -22 16 -36 42 -40 c12 -2 20 -6 20 -14 v-38z"
+            d={BOTTLE_SHAPE_PATH}
             fill="none"
-            stroke="rgba(255,255,255,0.4)"
-            strokeWidth="3"
+            stroke="rgba(255,255,255,0.32)"
+            strokeWidth="2.5"
+            strokeLinejoin="round"
           />
 
           {/* 木塞 */}
@@ -147,7 +135,7 @@ export function Bottle({
                   data-testid={`ball-${shown.length - 1 - i}`}
                 >
                   <g filter="url(#starGlow)" transform={`translate(${x}, ${y})`}>
-                    <StarShape cx={0} cy={0} r={r} fill={intensityColor(log.intensity)} />
+                    <RoundedStar size={r * 2} color={intensityColor(log.intensity)} />
                   </g>
                 </motion.g>
               );
@@ -183,21 +171,21 @@ export function Bottle({
               x="100"
               y="150"
               textAnchor="middle"
-              className="fill-slate-200 text-[14px] font-semibold"
+              className="fill-milk text-[14px] font-semibold"
             >
               +{count - MAX_BALLS}
             </text>
           )}
         </svg>
 
-        <span className="pointer-events-none absolute left-1/2 top-[6px] -translate-x-1/2 rounded-full bg-amber-400/20 px-3 py-1 text-xs font-medium text-amber-100 ring-1 ring-amber-300/40 transition group-hover:scale-105 group-hover:bg-amber-400/30">
+        <span className="pointer-events-none absolute left-1/2 top-[6px] -translate-x-1/2 rounded-full bg-star-gold/15 px-3 py-1 text-xs font-medium text-star-gold ring-1 ring-star-gold/30 backdrop-blur-md transition group-hover:scale-105 group-hover:bg-star-gold/25">
           ✨ 扔一颗星星
         </span>
       </button>
 
-      <p className="text-sm text-slate-400">
+      <p className="text-sm text-milk-dim">
         瓶内 <span className="font-semibold text-star-amber">{count}</span> 颗星星 · 星光{" "}
-        <span className="font-semibold text-sky-300">{percent}%</span>
+        <span className="font-semibold text-star-gold">{percent}%</span>
       </p>
     </div>
   );

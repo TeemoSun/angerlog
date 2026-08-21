@@ -53,7 +53,7 @@ export function TabBar({
                 "relative flex flex-1 flex-col items-center gap-1 py-3 text-xs transition " +
                 (active === tab.key
                   ? "text-star-amber"
-                  : "text-slate-400 hover:text-slate-200")
+                  : "text-milk-dim hover:text-milk")
               }
             >
               <motion.span
@@ -78,7 +78,7 @@ export function TabBar({
   }
 
   return (
-    <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1 backdrop-blur-xl">
+    <div className="flex items-center gap-1 rounded-full border border-glass-border bg-glass p-1 backdrop-blur-xl">
       {TABS.map((tab) => (
         <button
           key={tab.key}
@@ -87,8 +87,8 @@ export function TabBar({
           className={
             "rounded-full px-4 py-1.5 text-sm transition " +
             (active === tab.key
-              ? "bg-gradient-to-r from-star-gold/20 to-star-amber/20 text-star-amber ring-1 ring-star-amber/40 shadow-[0_0_12px_rgba(251,191,36,0.15)]"
-              : "text-slate-300 hover:text-white")
+              ? "bg-star-gold/20 text-star-gold ring-1 ring-star-amber/40 shadow-[0_0_12px_rgba(251,191,36,0.15)]"
+              : "text-milk-dim hover:text-milk")
           }
         >
           {tab.label}

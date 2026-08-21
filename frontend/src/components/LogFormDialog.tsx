@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { BreathingGuide } from "@/components/BreathingGuide";
+import { RoundedStar } from "@/components/Star";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -82,6 +83,9 @@ export function LogFormDialog({
 
   const selectIntensity = (value: number) => setValue("intensity", value, { shouldValidate: true });
 
+  const today = new Date();
+  const dateText = `${today.getFullYear()} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+
   return (
     <Dialog
       open={open}
@@ -90,13 +94,19 @@ export function LogFormDialog({
         onOpenChange(o);
       }}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-paper-muted/50 bg-paper text-ink">
+      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[2.25rem] border-paper-muted/50 bg-paper text-ink">
         <DialogHeader className="text-center sm:text-left">
           <DialogTitle className="font-hand text-2xl font-normal text-ink">今天的心情</DialogTitle>
           <DialogDescription className="text-ink-light">
             写下来，折成一颗星星投进瓶中
           </DialogDescription>
         </DialogHeader>
+
+        {/* 日期区 + 极细浅棕分割线 */}
+        <div className="flex flex-col gap-3">
+          <p className="text-xs tracking-wide text-ink-light">{dateText}</p>
+          <div className="h-px w-full bg-paper-muted" />
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" data-testid="log-form">
           <div className="flex flex-col gap-2">
@@ -107,7 +117,7 @@ export function LogFormDialog({
               maxLength={500}
               {...register("trigger_reason")}
               aria-invalid={!!errors.trigger_reason}
-              className="min-h-[100px] rounded-2xl border-paper-muted bg-white/70 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
+              className="min-h-[100px] rounded-2xl border-none bg-transparent px-1 text-ink shadow-none placeholder:text-ink-light/60 focus-visible:ring-0"
             />
             {errors.trigger_reason && (
               <p className="text-xs text-star-crimson" role="alert">
@@ -130,19 +140,12 @@ export function LogFormDialog({
                     className={
                       "flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition " +
                       (selected
-                        ? "border-star-amber bg-star-amber/15 shadow-[0_0_18px_rgba(251,191,36,0.18)]"
-                        : "border-paper-muted bg-white/60 hover:border-star-amber/40")
+                        ? "border-star-amber/60 bg-star-amber/10 shadow-[0_0_18px_rgba(251,191,36,0.15)]"
+                        : "border-paper-muted/60 bg-white/70 hover:border-star-amber/40")
                     }
                     data-testid={`mood-${level.label}`}
                   >
-                    <svg width="32" height="32" viewBox="0 0 32 32" className="star-glow">
-                      <polygon
-                        points="16,2 19,12 30,12 21,19 24,30 16,23 8,30 11,19 2,12 13,12"
-                        fill={intensityColor(submitValue)}
-                        stroke="rgba(255,255,255,0.5)"
-                        strokeWidth="1"
-                      />
-                    </svg>
+                    <RoundedStar size={32} color={intensityColor(submitValue)} glow />
                     <span className="text-sm font-medium text-ink">{level.label}</span>
                   </button>
                 );
@@ -170,7 +173,7 @@ export function LogFormDialog({
               value={category ?? "none"}
               onValueChange={(v) => setValue("category", v === "none" ? null : v)}
             >
-              <SelectTrigger id="category" className="rounded-xl border-paper-muted bg-white/70 text-ink focus:ring-star-amber/70">
+              <SelectTrigger id="category" className="rounded-xl border-paper-muted/70 bg-white/60 text-ink focus:ring-star-amber/70">
                 <SelectValue placeholder="选择分类" />
               </SelectTrigger>
               <SelectContent className="rounded-xl border-paper-muted bg-paper">
@@ -196,7 +199,7 @@ export function LogFormDialog({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-full bg-gradient-to-r from-star-gold via-star-amber to-star-orange text-ink shadow-lg shadow-amber-900/20 transition hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-900/30 disabled:opacity-60 sm:w-auto"
+              className="w-full rounded-full bg-camel px-8 text-white shadow-lg shadow-amber-900/20 transition hover:scale-[1.02] hover:bg-camel-hover hover:shadow-xl hover:shadow-amber-900/30 disabled:opacity-60 sm:w-auto"
             >
               {isSubmitting ? "投入中…" : "折成星星 ✨"}
             </Button>

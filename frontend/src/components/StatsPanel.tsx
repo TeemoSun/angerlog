@@ -25,7 +25,7 @@ import { fetchHeatmap, fetchSummary, fetchTrend } from "@/lib/requests";
 import type { HeatmapCell, Summary, TrendPoint } from "@/lib/types";
 import { startOfThisWeekStr, todayStr, WEEKDAYS_CN } from "@/lib/utils";
 
-const CATEGORY_COLORS = ["#f59e0b", "#fbbf24", "#f97316", "#34d399", "#60a5fa"];
+const CATEGORY_COLORS = ["#f6d365", "#fbbf24", "#fb923c", "#ef4444", "#dc2626"];
 
 export function StatsPanel() {
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -65,8 +65,8 @@ export function StatsPanel() {
   return (
     <div className="flex flex-col gap-4">
       {error && (
-        <Card className="border-red-500/30 bg-red-500/10">
-          <CardContent className="py-3 text-sm text-red-300">{error}</CardContent>
+        <Card className="border-star-red/30 bg-star-red/10">
+          <CardContent className="py-3 text-sm text-star-red/90">{error}</CardContent>
         </Card>
       )}
 
@@ -88,13 +88,13 @@ export function StatsPanel() {
         </div>
       )}
 
-      <Card className="border-white/10 bg-white/5 backdrop-blur-xl">
+      <Card className="border-glass-border bg-glass backdrop-blur-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="font-hand text-xl text-paper">趋势</CardTitle>
             <CardDescription>本周期内记录次数</CardDescription>
           </div>
-          <div className="flex gap-1 rounded-full border border-white/10 bg-white/5 p-1">
+          <div className="flex gap-1 rounded-full border border-glass-border bg-glass p-1">
             {(["day", "week", "month"] as const).map((g) => (
               <Button
                 key={g}
@@ -105,7 +105,7 @@ export function StatsPanel() {
                   "rounded-full text-xs " +
                   (granularity === g
                     ? "bg-star-amber/20 text-star-amber ring-1 ring-star-amber/40"
-                    : "text-slate-300 hover:text-white")
+                    : "text-milk-dim hover:text-milk")
                 }
               >
                 {g === "day" ? "日" : g === "week" ? "周" : "月"}
@@ -115,15 +115,15 @@ export function StatsPanel() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex h-48 items-center justify-center text-sm text-slate-400">
+            <div className="flex h-48 items-center justify-center text-sm text-milk-dim">
               加载中…
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={trend} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
                 <CartesianGrid stroke="rgba(255,255,255,0.06)" />
-                <XAxis dataKey="period" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-                <YAxis allowDecimals={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                <XAxis dataKey="period" tick={{ fill: "#c9bfa8", fontSize: 11 }} />
+                <YAxis allowDecimals={false} tick={{ fill: "#c9bfa8", fontSize: 11 }} />
                 <Tooltip
                   contentStyle={{
                     background: "rgba(15,23,42,0.95)",
@@ -149,7 +149,7 @@ export function StatsPanel() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="border-white/10 bg-white/5 backdrop-blur-xl">
+        <Card className="border-glass-border bg-glass backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="font-hand text-xl text-paper">分类分布</CardTitle>
             <CardDescription>各类别的记录次数</CardDescription>
@@ -185,19 +185,19 @@ export function StatsPanel() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="py-8 text-center text-sm text-slate-400">暂无分类数据</p>
+              <p className="py-8 text-center text-sm text-milk-dim">暂无分类数据</p>
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-white/5 backdrop-blur-xl">
+        <Card className="border-glass-border bg-glass backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="font-hand text-xl text-paper">高频时段</CardTitle>
             <CardDescription>星期 × 小时 · 按用户时区</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex h-48 items-center justify-center text-sm text-slate-400">
+              <div className="flex h-48 items-center justify-center text-sm text-milk-dim">
                 加载中…
               </div>
             ) : (
@@ -205,7 +205,7 @@ export function StatsPanel() {
                 <div className="grid min-w-[480px] grid-cols-[2rem_repeat(7,1fr)] gap-1 text-center">
                   <div />
                   {WEEKDAYS_CN.map((d) => (
-                    <div key={d} className="text-[10px] text-slate-400">
+                    <div key={d} className="text-[10px] text-milk-dim">
                       {d}
                     </div>
                   ))}
@@ -229,9 +229,9 @@ export function StatsPanel() {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <Card className="border-white/10 bg-white/5 text-center backdrop-blur-xl">
+    <Card className="border-glass-border bg-glass text-center backdrop-blur-xl">
       <CardContent className="flex flex-col gap-1 py-5">
-        <span className="text-xs text-slate-400">{label}</span>
+        <span className="text-xs text-milk-dim">{label}</span>
         <span className="text-3xl font-bold text-star-amber drop-shadow-sm">{value}</span>
       </CardContent>
     </Card>
@@ -262,7 +262,7 @@ function HeatCellRow({
 }) {
   return (
     <>
-      <div className="flex items-center justify-end text-[10px] text-slate-500">
+      <div className="flex items-center justify-end text-[10px] text-milk-dim/80">
         {String(hour).padStart(2, "0")}时
       </div>
       {WEEKDAYS_CN.map((_, dayIdx) => {

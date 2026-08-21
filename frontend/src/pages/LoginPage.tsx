@@ -76,7 +76,7 @@ export function LoginPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   autoComplete="username"
                   placeholder="请输入用户名"
-                  className="rounded-xl border-paper-muted bg-white/70 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
+                  className="rounded-xl border-paper-muted/70 bg-white/60 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -88,7 +88,7 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   placeholder="请输入密码"
-                  className="rounded-xl border-paper-muted bg-white/70 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
+                  className="rounded-xl border-paper-muted/70 bg-white/60 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
                 />
               </div>
               {error && (
@@ -100,7 +100,7 @@ export function LoginPage() {
                 type="submit"
                 size="lg"
                 disabled={submitting}
-                className="mt-1 w-full rounded-full bg-gradient-to-r from-star-gold via-star-amber to-star-orange text-ink shadow-lg shadow-amber-900/20 transition hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-900/30 disabled:opacity-60"
+                className="mt-1 w-full rounded-full bg-camel text-white shadow-lg shadow-amber-900/20 transition hover:scale-[1.02] hover:bg-camel-hover hover:shadow-xl hover:shadow-amber-900/30 disabled:opacity-60"
               >
                 {submitting ? "登录中…" : "开启瓶子"}
               </Button>
