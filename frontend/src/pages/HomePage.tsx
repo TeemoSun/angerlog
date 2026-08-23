@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Bottle, BOTTLE_SHAPE_PATH } from "@/components/Bottle";
+import { Bottle } from "@/components/Bottle";
 import { LogFormDialog } from "@/components/LogFormDialog";
 import { LogList } from "@/components/LogList";
 import { ResolveDialog } from "@/components/ResolveDialog";
@@ -123,19 +123,7 @@ export function HomePage() {
         </div>
       </header>
 
-      <main className="relative mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 sm:pb-8">
-        {/* 首页瓶子剪影暗纹（仅瓶子页展示） */}
-        {tab === "bottle" && (
-          <svg
-            viewBox="0 0 200 320"
-            className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[640px] w-[420px] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-[0.05]"
-            aria-hidden="true"
-          >
-            <path d={BOTTLE_SHAPE_PATH} fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="4" />
-            <rect x="88" y="6" width="24" height="16" rx="3" fill="rgba(255,255,255,0.9)" />
-          </svg>
-        )}
-
+      <main className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-24 pt-6 sm:pb-8">
         {error && (
           <Card className="relative z-10 mb-4 border-star-red/30 bg-star-red/10">
             <CardContent className="py-3 text-sm text-star-red/90">{error}</CardContent>
@@ -145,16 +133,16 @@ export function HomePage() {
         <AnimatePresence mode="wait">
           <motion.div
             key={tab}
-            className="relative z-10"
+            className="relative z-10 flex flex-1 flex-col"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
             {tab === "bottle" && (
-              <div className="flex flex-col items-center gap-6">
+              <div className="flex flex-1 flex-col items-center justify-center gap-6">
                 <Bottle logs={logs} onOpenForm={() => setFormOpen(true)} />
-                <div className="grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
                   <SummaryTile
                     label="今日已记录"
                     value={summary?.total_count != null ? String(summary.total_count) : "—"}
@@ -206,9 +194,9 @@ export function HomePage() {
 function SummaryTile({ label, value }: { label: string; value: string }) {
   return (
     <Card className="border-glass-border bg-glass text-center backdrop-blur-xl">
-      <CardContent className="flex flex-col items-center gap-1 py-5 text-center">
+      <CardContent className="flex flex-col items-center gap-1 py-4 text-center sm:py-5">
         <span className="text-xs text-milk-dim">{label}</span>
-        <span className="text-3xl font-bold text-star-amber drop-shadow-sm">{value}</span>
+        <span className="text-2xl font-bold text-star-amber drop-shadow-sm sm:text-3xl">{value}</span>
       </CardContent>
     </Card>
   );

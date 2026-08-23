@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 未设置，请在 .env 中配置}
       POSTGRES_DB: ${POSTGRES_DB:-emotion_bottle}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./data/pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app_user} -d ${POSTGRES_DB:-emotion_bottle}"]
       interval: 10s
@@ -41,6 +41,3 @@ services:
       FRONTEND_DIST: /app/frontend/dist
     ports:
       - "8000:8000"
-
-volumes:
-  pgdata:

@@ -5,8 +5,9 @@ import { intensityColor } from "@/lib/utils";
 
 export const WATER_MAX_COUNT = 30;
 
+// 敦实可爱造型：大圆角矩形瓶身（x30-170, y~96-280）+ 短圆颈（y62-78）+ 顶部圆形木塞
 export const BOTTLE_SHAPE_PATH =
-  "M85 18 h30 v38 c0 8 8 12 20 14 c26 4 42 18 42 40 v135 c0 22 -18 40 -40 40 h-54 c-22 0 -40 -18 -40 -40 v-135 c0 -22 16 -36 42 -40 c12 -2 20 -6 20 -14 v-38z";
+  "M80 62 h40 v16 c0 12 14 14 24 18 c16 8 26 16 26 34 v110 c0 24 -20 40 -45 40 h-50 c-25 0 -45 -16 -45 -40 v-110 c0 -18 10 -26 26 -34 c10 -4 24 -6 24 -18 v-16 z";
 
 export function waterLevelPercent(count: number): number {
   const capped = Math.min(count, WATER_MAX_COUNT);
@@ -20,7 +21,7 @@ function ballPosition(index: number): { x: number; y: number; r: number } {
   const row = Math.floor(index / COLS);
   const col = index % COLS;
   const x = 58 + col * 27 + (row % 2) * 13;
-  const y = 268 - row * 30;
+  const y = 262 - row * 26;
   return { x, y, r: 9 };
 }
 
@@ -33,7 +34,8 @@ export function Bottle({
 }) {
   const count = logs.length;
   const percent = waterLevelPercent(count);
-  const waterTop = 285 - (percent / 100) * 200;
+  const waterBottom = 279;
+  const waterTop = waterBottom - (percent / 100) * 175;
   const shown = logs.slice(-MAX_BALLS);
 
   return (
@@ -46,7 +48,8 @@ export function Bottle({
       >
         <svg
           viewBox="0 0 200 320"
-          className="h-[360px] w-[230px] drop-shadow-[0_20px_50px_rgba(251,191,36,0.15)] transition duration-500 group-hover:drop-shadow-[0_24px_60px_rgba(251,191,36,0.25)] sm:h-[420px] sm:w-[270px]"
+          preserveAspectRatio="xMidYMid meet"
+          className="h-[360px] w-auto max-w-full drop-shadow-[0_20px_50px_rgba(251,191,36,0.15)] transition duration-500 group-hover:drop-shadow-[0_24px_60px_rgba(251,191,36,0.25)] sm:h-[420px]"
           data-testid="bottle"
         >
           <defs>
@@ -79,29 +82,19 @@ export function Bottle({
           </defs>
 
           {/* 瓶底阴影 */}
-          <ellipse cx="100" cy="305" rx="52" ry="8" fill="rgba(0,0,0,0.3)" />
-
-          {/* 瓶身轮廓 */}
-          <path
-            d={BOTTLE_SHAPE_PATH}
-            fill="none"
-            stroke="rgba(255,255,255,0.32)"
-            strokeWidth="2.5"
-            strokeLinejoin="round"
-          />
-
-          {/* 木塞 */}
-          <rect x="88" y="6" width="24" height="16" rx="3" fill="url(#corkGrad)" />
-          <rect x="86" y="20" width="28" height="8" rx="2" fill="rgba(196,154,108,0.9)" />
+          <ellipse cx="100" cy="298" rx="58" ry="8" fill="rgba(0,0,0,0.3)" />
 
           <g clipPath="url(#bottleClip)">
+            {/* 玻璃体积感：随瓶身轮廓裁剪，避免出现硬边内框 */}
+            <rect x="25" y="55" width="150" height="235" fill="url(#glassGrad)" />
+
             {/* 液体 */}
             <motion.rect
               x="42"
               width="116"
               fill="url(#waterGrad)"
               initial={false}
-              animate={{ y: waterTop, height: 285 - waterTop }}
+              animate={{ y: waterTop, height: waterBottom - waterTop }}
               transition={{ type: "spring", stiffness: 60, damping: 16 }}
               data-testid="water"
               data-level={percent}
@@ -111,7 +104,7 @@ export function Bottle({
             <motion.ellipse
               cx="100"
               fill="rgba(255,255,255,0.25)"
-              rx="56"
+              rx="54"
               ry="3"
               initial={false}
               animate={{ cy: waterTop }}
@@ -140,36 +133,41 @@ export function Bottle({
                 </motion.g>
               );
             })}
+
+            {/* 两侧极细竖向高光，点到即止 */}
+            <path
+              d="M48 135 Q51 190 48 248"
+              fill="none"
+              stroke="rgba(255,255,255,0.15)"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            <path
+              d="M152 135 Q149 190 152 248"
+              fill="none"
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
           </g>
 
-          {/* 玻璃高光 */}
-          <rect
-            x="44"
-            y="75"
-            width="112"
-            height="212"
-            rx="12"
-            fill="url(#glassGrad)"
-          />
+          {/* 瓶身轮廓置于最上层，保证瓶口/瓶底边缘清晰 */}
           <path
-            d="M52 85 Q55 170 52 260"
+            d={BOTTLE_SHAPE_PATH}
             fill="none"
-            stroke="rgba(255,255,255,0.15)"
-            strokeWidth="2"
-            strokeLinecap="round"
+            stroke="rgba(255,255,255,0.32)"
+            strokeWidth="2.5"
+            strokeLinejoin="round"
           />
-          <path
-            d="M148 85 Q145 170 148 260"
-            fill="none"
-            stroke="rgba(255,255,255,0.1)"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
+
+          {/* 圆形木塞 */}
+          <rect x="82" y="36" width="36" height="18" rx="9" fill="url(#corkGrad)" />
+          <rect x="77" y="50" width="46" height="11" rx="5.5" fill="rgba(196,154,108,0.9)" />
 
           {count > MAX_BALLS && (
             <text
               x="100"
-              y="150"
+              y="185"
               textAnchor="middle"
               className="fill-milk text-[14px] font-semibold"
             >

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export const TABS = [
@@ -41,7 +42,8 @@ export function TabBar({
   };
 
   if (isMobile) {
-    return (
+    // 必须传送到 body：祖先的 backdrop-filter 会劫持 fixed 定位，导致导航被钉在页头
+    return createPortal(
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-night-900/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl">
         <div className="mx-auto flex max-w-md">
           {TABS.map((tab) => (
@@ -73,7 +75,8 @@ export function TabBar({
             </button>
           ))}
         </div>
-      </nav>
+      </nav>,
+      document.body,
     );
   }
 
