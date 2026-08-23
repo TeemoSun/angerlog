@@ -4,8 +4,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+TEST_DB_PORT = os.environ.get("TEST_DB_PORT", "54329")
 os.environ["DATABASE_URL"] = (
-    "postgresql+asyncpg://app_user:testpass@localhost:54329/emotion_bottle_test"
+    f"postgresql+asyncpg://app_user:testpass@localhost:{TEST_DB_PORT}/emotion_bottle_test"
 )
 os.environ["USERNAME"] = "admin"
 os.environ["PASSWORD"] = "testpass123"
