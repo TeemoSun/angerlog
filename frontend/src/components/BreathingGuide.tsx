@@ -16,41 +16,33 @@ export const breathingFrameClass =
 export function useBreathingPhase(active: boolean) {
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [cycle, setCycle] = useState(0);
-  const [tick, setTick] = useState(0);
   const [completed, setCompleted] = useState<string[]>([]);
 
   useEffect(() => {
     if (!active) {
       setPhaseIndex(0);
       setCycle(0);
-      setTick(0);
       setCompleted([]);
       return;
     }
     const timer = setTimeout(() => {
-      if (tick + 1 >= PHASES[phaseIndex].seconds) {
-        const nextIndex = phaseIndex === PHASES.length - 1 ? 0 : phaseIndex + 1;
-        if (phaseIndex === PHASES.length - 1) {
-          setCycle((c) => c + 1);
-          setCompleted([]);
-        } else {
-          setCompleted((done) => [...done, PHASES[phaseIndex].key]);
-        }
-        setPhaseIndex(nextIndex);
-        setTick(0);
+      const nextIndex = phaseIndex === PHASES.length - 1 ? 0 : phaseIndex + 1;
+      if (phaseIndex === PHASES.length - 1) {
+        setCycle((c) => c + 1);
+        setCompleted([]);
       } else {
-        setTick((t) => t + 1);
+        setCompleted((done) => [...done, PHASES[phaseIndex].key]);
       }
-    }, 1000);
+      setPhaseIndex(nextIndex);
+    }, PHASES[phaseIndex].seconds * 1000);
     return () => clearTimeout(timer);
-  }, [active, phaseIndex, tick]);
+  }, [active, phaseIndex]);
 
-  const phase = PHASES[phaseIndex];
-  return { phase, cycle, progress: tick / phase.seconds, completed };
+  return { phase: PHASES[phaseIndex], cycle, completed };
 }
 
 export function BreathingGuide({ active }: { active: boolean }) {
-  const { phase, cycle, progress, completed } = useBreathingPhase(active);
+  const { phase, cycle, completed } = useBreathingPhase(active);
 
   return (
     <div
@@ -103,7 +95,7 @@ export function BreathingGuide({ active }: { active: boolean }) {
               </AnimatePresence>
             )}
             {active && (
-              <circle
+              <motion.circle
                 key={`${phase.key}-${cycle}`}
                 cx="56"
                 cy="56"
@@ -113,10 +105,9 @@ export function BreathingGuide({ active }: { active: boolean }) {
                 strokeLinecap="round"
                 stroke={phase.color}
                 strokeDasharray={CIRCUMFERENCE}
-                strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
-                style={{
-                  transition: "stroke-dashoffset 1000ms linear, stroke 800ms ease",
-                }}
+                initial={{ strokeDashoffset: CIRCUMFERENCE }}
+                animate={{ strokeDashoffset: 0 }}
+                transition={{ duration: phase.seconds, ease: "linear" }}
                 data-testid="breathing-progress"
               />
             )}
