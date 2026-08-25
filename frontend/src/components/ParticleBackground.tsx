@@ -78,8 +78,8 @@ export function ParticleBackground() {
       {SHOOTING_STARS.map((s, i) => (
         <motion.div
           key={`shoot-${i}`}
-          className="absolute h-[1px] w-16 rounded-full bg-gradient-to-r from-transparent via-star-gold/60 to-transparent"
-          style={{ left: s.x, top: s.y }}
+          className="absolute h-[1px] w-24 rounded-full bg-gradient-to-r from-transparent via-star-gold/80 to-star-gold"
+          style={{ left: s.x, top: s.y, rotate: 34 }}
           initial={{ x: 0, y: 0, opacity: 0 }}
           animate={{
             x: [0, 120, 240],
