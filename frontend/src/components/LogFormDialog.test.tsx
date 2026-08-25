@@ -38,13 +38,10 @@ describe("LogFormDialog", () => {
     renderDialog();
     expect(screen.queryByTestId("breathing-guide")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("mood-特别生气"));
-    await waitFor(() => {
-      expect(screen.getByTestId("high-intensity-hint")).toBeInTheDocument();
-    });
-    expect(screen.queryByTestId("breathing-guide")).not.toBeInTheDocument();
     expect(
       await screen.findByRole("heading", { name: "跟着呼吸训练一下？" }),
     ).toBeInTheDocument();
+    expect(screen.queryByTestId("breathing-guide")).not.toBeInTheDocument();
   });
 
   it("拒绝邀请时不出现呼吸引导", async () => {

@@ -10,29 +10,33 @@ const PHASES = [
 export function useBreathingPhase(active: boolean) {
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [cycle, setCycle] = useState(0);
+  const [remaining, setRemaining] = useState<number>(PHASES[0].seconds);
 
   useEffect(() => {
     if (!active) {
       setPhaseIndex(0);
       setCycle(0);
+      setRemaining(PHASES[0].seconds);
       return;
     }
-    const timer = setTimeout(() => {
-      if (phaseIndex === PHASES.length - 1) {
-        setCycle((c) => c + 1);
-        setPhaseIndex(0);
-      } else {
-        setPhaseIndex((i) => i + 1);
-      }
-    }, PHASES[phaseIndex].seconds * 1000);
+    if (remaining <= 1) {
+      const nextIndex = phaseIndex === PHASES.length - 1 ? 0 : phaseIndex + 1;
+      const timer = setTimeout(() => {
+        if (phaseIndex === PHASES.length - 1) setCycle((c) => c + 1);
+        setPhaseIndex(nextIndex);
+        setRemaining(PHASES[nextIndex].seconds);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+    const timer = setTimeout(() => setRemaining((r) => r - 1), 1000);
     return () => clearTimeout(timer);
-  }, [active, phaseIndex]);
+  }, [active, phaseIndex, remaining]);
 
-  return { phase: PHASES[phaseIndex], cycle };
+  return { phase: PHASES[phaseIndex], cycle, remaining };
 }
 
 export function BreathingGuide({ active }: { active: boolean }) {
-  const { phase, cycle } = useBreathingPhase(active);
+  const { phase, cycle, remaining } = useBreathingPhase(active);
 
   return (
     <div
@@ -56,13 +60,20 @@ export function BreathingGuide({ active }: { active: boolean }) {
           animate={{ scale: active ? Math.max(phase.scale - 0.25, 0.5) : 0.4 }}
           transition={{ duration: active ? phase.seconds : 0.3, ease: "easeInOut" }}
         />
-        <span className="absolute text-2xl font-semibold text-amber-900">
-          {active ? phase.label : "准备"}
-        </span>
+        <div className="absolute flex flex-col items-center gap-1">
+          <span className="text-2xl font-semibold text-amber-900">
+            {active ? phase.label : "准备"}
+          </span>
+          {active && (
+            <span
+              className="text-4xl font-semibold text-amber-900"
+              data-testid="phase-countdown"
+            >
+              {remaining}
+            </span>
+          )}
+        </div>
       </div>
-      <p className="text-sm text-amber-800/80">
-        4-7-8 呼吸：吸气 4 秒 · 屏息 7 秒 · 呼气 8 秒
-      </p>
       {active && (
         <p className="text-xs text-amber-700/60" data-testid="breathing-cycle">
           已跟随 {cycle} 轮

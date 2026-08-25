@@ -39,7 +39,7 @@ export function BreathingDialog({ open, onOpenChange }: { open: boolean; onOpenC
             <DialogHeader className="text-center sm:text-left">
               <DialogTitle className="text-2xl font-normal text-ink">跟着呼吸训练一下？</DialogTitle>
               <DialogDescription className="text-ink-light">
-                一起做 4-7-8 呼吸练习，平复一下心情
+                一起做呼吸练习，平复一下心情
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

@@ -69,7 +69,6 @@ export function LogFormDialog({
   const intensity = watch("intensity");
   const category = watch("category");
   const createdAt = watch("created_at");
-  const high = intensity >= 8;
   const [submitError, setSubmitError] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [breathingOpen, setBreathingOpen] = useState(false);
@@ -186,11 +185,6 @@ export function LogFormDialog({
               /10
               <span className="text-xs">{intensityLabel(intensity)}</span>
             </div>
-            {high && (
-              <p className="text-xs text-star-orange" role="alert" data-testid="high-intensity-hint">
-                程度较高，不妨跟着呼吸训练平复一下心情
-              </p>
-            )}
           </div>
 
           <div className="flex flex-col gap-2">
