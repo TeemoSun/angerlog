@@ -91,7 +91,7 @@ export function ParticleBackground() {
             delay: s.delay,
             repeat: Infinity,
             repeatDelay: 18 + i * 4,
-            ease: "easeOut",
+            ease: "linear",
           }}
         />
       ))}
