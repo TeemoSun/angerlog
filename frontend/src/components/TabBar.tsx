@@ -62,8 +62,8 @@ export function TabBar({
   if (isMobile) {
     // 必须传送到 body：祖先的 backdrop-filter 会劫持 fixed 定位，导致导航被钉在页头
     return createPortal(
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
-        {renderPill(true)}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-night-900/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl">
+        <div className="mx-auto flex max-w-6xl justify-center px-4 pb-3 pt-3">{renderPill(true)}</div>
       </nav>,
       document.body,
     );
