@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
 
 import { LogFormDialog } from "@/components/LogFormDialog";
 
@@ -21,6 +21,10 @@ function renderDialog() {
   return { onCreated, onOpenChange };
 }
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe("LogFormDialog", () => {
   it("空原因提交时显示校验错误", async () => {
     const user = userEvent.setup();
@@ -29,13 +33,47 @@ describe("LogFormDialog", () => {
     expect(await screen.findByText(/请描述一下发生了什么/)).toBeInTheDocument();
   });
 
-  it("强度≥8 时显示呼吸引导", async () => {
+  it("强度≥8 时弹出呼吸训练邀请", async () => {
     const user = userEvent.setup();
     renderDialog();
     expect(screen.queryByTestId("breathing-guide")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("mood-特别生气"));
     await waitFor(() => {
       expect(screen.getByTestId("high-intensity-hint")).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId("breathing-guide")).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "跟着呼吸训练一下？" }),
+    ).toBeInTheDocument();
+  });
+
+  it("拒绝邀请时不出现呼吸引导", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+    await user.click(screen.getByTestId("mood-特别生气"));
+    await user.click(screen.getByRole("button", { name: "不用了" }));
+    await waitFor(() => {
+      expect(screen.queryByTestId("breathing-guide")).not.toBeInTheDocument();
+    });
+    expect(screen.queryByText("跟着呼吸训练一下？")).not.toBeInTheDocument();
+  });
+
+  it("接受邀请后先倒计时再开始呼吸引导", async () => {
+    vi.useFakeTimers();
+    renderDialog();
+    fireEvent.click(screen.getByTestId("mood-特别生气"));
+    fireEvent.click(screen.getByRole("button", { name: "好的" }));
+    expect(screen.getByTestId("breathing-countdown")).toHaveTextContent("3");
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(screen.getByTestId("breathing-countdown")).toHaveTextContent("2");
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(screen.getByTestId("breathing-countdown")).toHaveTextContent("1");
+    act(() => {
+      vi.advanceTimersByTime(1000);
     });
     expect(screen.getByTestId("breathing-guide")).toBeInTheDocument();
   });
@@ -47,6 +85,7 @@ describe("LogFormDialog", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("breathing-guide")).not.toBeInTheDocument();
     });
+    expect(screen.queryByText("跟着呼吸训练一下？")).not.toBeInTheDocument();
   });
 
   it("有效提交调用 createLogRequest 并触发 onCreated", async () => {

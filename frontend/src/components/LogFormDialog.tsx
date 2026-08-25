@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { BreathingGuide } from "@/components/BreathingGuide";
+import { BreathingDialog } from "@/components/BreathingDialog";
 import { DateTimePicker } from "@/components/DateTimePicker";
 import { RoundedStar } from "@/components/Star";
 import { Button } from "@/components/ui/button";
@@ -72,6 +72,7 @@ export function LogFormDialog({
   const high = intensity >= 8;
   const [submitError, setSubmitError] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [breathingOpen, setBreathingOpen] = useState(false);
 
   const onSubmit = async (values: FormValues) => {
     setSubmitError("");
@@ -90,7 +91,10 @@ export function LogFormDialog({
     }
   };
 
-  const selectIntensity = (value: number) => setValue("intensity", value, { shouldValidate: true });
+  const selectIntensity = (value: number) => {
+    setValue("intensity", value, { shouldValidate: true });
+    if (value >= 8) setBreathingOpen(true);
+  };
 
   const dateText = `${createdAt.getFullYear()} 年 ${createdAt.getMonth() + 1} 月 ${createdAt.getDate()} 日`;
   const timeText = `${String(createdAt.getHours()).padStart(2, "0")}:${String(
@@ -184,7 +188,7 @@ export function LogFormDialog({
             </div>
             {high && (
               <p className="text-xs text-star-orange" role="alert" data-testid="high-intensity-hint">
-                程度较高，试试下面的呼吸引导
+                程度较高，不妨跟着呼吸训练平复一下心情
               </p>
             )}
           </div>
@@ -208,8 +212,6 @@ export function LogFormDialog({
               </SelectContent>
             </Select>
           </div>
-
-          {high && <BreathingGuide active={open} />}
 
           {submitError && (
             <p className="text-xs text-star-crimson" role="alert">
@@ -235,6 +237,7 @@ export function LogFormDialog({
         onChange={(d) => setValue("created_at", d, { shouldValidate: true })}
         title="选择生气时间"
       />
+      <BreathingDialog open={breathingOpen} onOpenChange={setBreathingOpen} />
     </Dialog>
   );
 }
