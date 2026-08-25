@@ -105,7 +105,7 @@ export function HomePage() {
 
   return (
     <div className="relative z-10 flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 border-b border-white/5 bg-night-900/60 backdrop-blur-2xl">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-night-900/40 backdrop-blur-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-2.5">
             <span className="text-2xl drop-shadow-md">🫙</span>
