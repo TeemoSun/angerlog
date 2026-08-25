@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 const PHASES = [
-  { key: "in", label: "吸气", seconds: 4, scale: 1.3 },
-  { key: "hold", label: "屏息", seconds: 7, scale: 1.3 },
-  { key: "out", label: "呼气", seconds: 8, scale: 0.8 },
+  { key: "in", label: "吸气", seconds: 4, scale: 1.3, color: "text-star-gold/80", doneColor: "text-star-gold/60" },
+  { key: "hold", label: "屏息", seconds: 7, scale: 1.3, color: "text-star-amber/80", doneColor: "text-star-amber/60" },
+  { key: "out", label: "呼气", seconds: 8, scale: 0.8, color: "text-star-orange/80", doneColor: "text-star-orange/60" },
 ] as const;
 
 const RADIUS = 52;
@@ -14,18 +14,25 @@ export function useBreathingPhase(active: boolean) {
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [cycle, setCycle] = useState(0);
   const [remaining, setRemaining] = useState<number>(PHASES[0].seconds);
+  const [completed, setCompleted] = useState<string[]>([]);
 
   useEffect(() => {
     if (!active) {
       setPhaseIndex(0);
       setCycle(0);
       setRemaining(PHASES[0].seconds);
+      setCompleted([]);
       return;
     }
     const timer = setTimeout(() => {
       if (remaining <= 1) {
         const nextIndex = phaseIndex === PHASES.length - 1 ? 0 : phaseIndex + 1;
-        if (phaseIndex === PHASES.length - 1) setCycle((c) => c + 1);
+        if (phaseIndex === PHASES.length - 1) {
+          setCycle((c) => c + 1);
+          setCompleted([]);
+        } else {
+          setCompleted((done) => [...done, PHASES[phaseIndex].key]);
+        }
         setPhaseIndex(nextIndex);
         setRemaining(PHASES[nextIndex].seconds);
       } else {
@@ -35,11 +42,11 @@ export function useBreathingPhase(active: boolean) {
     return () => clearTimeout(timer);
   }, [active, phaseIndex, remaining]);
 
-  return { phase: PHASES[phaseIndex], cycle, remaining };
+  return { phase: PHASES[phaseIndex], cycle, remaining, completed };
 }
 
 export function BreathingGuide({ active }: { active: boolean }) {
-  const { phase, cycle, remaining } = useBreathingPhase(active);
+  const { phase, cycle, remaining, completed } = useBreathingPhase(active);
   const progress = (phase.seconds - remaining) / (phase.seconds - 1);
 
   return (
@@ -69,20 +76,41 @@ export function BreathingGuide({ active }: { active: boolean }) {
               stroke="currentColor"
               className="text-star-amber/25"
             />
-            <circle
-              key={`${phase.key}-${cycle}`}
-              cx="56"
-              cy="56"
-              r={RADIUS}
-              fill="none"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              stroke="currentColor"
-              className="text-star-amber/80 transition-[stroke-dashoffset] duration-1000 ease-linear"
-              strokeDasharray={CIRCUMFERENCE}
-              strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
-              data-testid="breathing-progress"
-            />
+            {active &&
+              completed.map((key) => {
+                const done = PHASES.find((p) => p.key === key)!;
+                return (
+                  <circle
+                    key={`${key}-${cycle}`}
+                    cx="56"
+                    cy="56"
+                    r={RADIUS}
+                    fill="none"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    className={done.doneColor}
+                    strokeDasharray={CIRCUMFERENCE}
+                    strokeDashoffset={0}
+                  />
+                );
+              })}
+            {active && (
+              <circle
+                key={`${phase.key}-${cycle}`}
+                cx="56"
+                cy="56"
+                r={RADIUS}
+                fill="none"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                stroke="currentColor"
+                className={`${phase.color} transition-[stroke-dashoffset] duration-1000 ease-linear`}
+                strokeDasharray={CIRCUMFERENCE}
+                strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
+                data-testid="breathing-progress"
+              />
+            )}
           </svg>
         </motion.div>
         <motion.div
