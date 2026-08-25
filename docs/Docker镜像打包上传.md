@@ -11,10 +11,17 @@
 
 ## Dockerfile 说明
 
-`Dockerfile` 为多阶段构建：
+`Dockerfile` 为多阶段构建（3 阶段）：
 
 - **Stage 1 `frontend-builder`**：基于 `node:20-bookworm-slim`，执行 `npm ci`（回退 `npm install`）+ `npm run build`，产出 `frontend/dist`。
-- **Stage 2 `runtime`**：基于 `python:3.12-slim`，安装 `uv`（来自 `ghcr.io/astral-sh/uv:latest`），`uv sync --frozen --no-dev` 安装后端依赖，拷入后端代码与前端 `dist`，暴露 `8000` 端口，以 uvicorn 启动。
+- **Stage 2 `backend-deps`**：基于 `python:3.12-alpine`，安装 `uv`（来自 `ghcr.io/astral-sh/uv:latest`），`uv sync --frozen --no-dev` 安装后端依赖到 `/opt/venv`，随后删除 uv 缓存目录（避免缓存层带入运行时镜像）。
+- **Stage 3 `runtime`**：同样基于 `python:3.12-alpine`，只拷入 Stage 2 的 `/opt/venv` 与后端代码、前端 `dist`，暴露 `8000` 端口，以 uvicorn 启动。uv 二进制不进运行时镜像。
+
+> 当前镜像约 **157MB**（历史 glibc 版约 351MB）。体积优化点：
+> - 依赖安装与运行时分层，`uv`（53MB）与 `uv` 缓存（66MB）留在构建阶段。
+> - 基础镜像 `slim` → `alpine`（musl，约再省 75MB）。
+>
+> **注意**：alpine 下 uvicorn 走纯 asyncio 事件循环（uvloop/httptools 仅 glibc 有 wheel，musl 下 `uv sync` 自动跳过，属锁文件条件项行为，非配置缺失）；后端代码本身不依赖 glibc，逻辑不变。
 
 > 注意：alembic 迁移由 `app.main.lifespan` 在容器启动时自动执行，Dockerfile 不单独运行迁移。
 > 镜像声明 `HEALTHCHECK`（探测 `/health`）；`SECRET_KEY` / `CSRF_SECRET` / `PASSWORD` 为空或占位值时容器启动直接报错退出。

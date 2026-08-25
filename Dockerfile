@@ -6,23 +6,32 @@ RUN npm ci || npm install
 COPY frontend/ ./
 RUN npm run build
 
-# ===== Stage 2: 后端运行 =====
-FROM python:3.12-slim AS runtime
+# ===== Stage 2: 后端依赖（uv 仅在此阶段使用，不进运行时镜像）=====
+# 用 alpine 装依赖 + 运行时，全程 glibc-free，体积最小（~157MB）
+FROM python:3.12-alpine AS backend-deps
 # 安装 uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_CACHE_DIR=/tmp/uv-cache \
     PYTHONUNBUFFERED=1
 
-ENV PATH="/opt/venv/bin:$PATH"
+WORKDIR /app/backend
+COPY backend/pyproject.toml backend/uv.lock* ./
+RUN uv sync --frozen --no-dev && rm -rf /tmp/uv-cache
+
+# ===== Stage 3: 运行时 =====
+FROM python:3.12-alpine AS runtime
+# 后端基础镜像切到 alpine 后，uvicorn 将使用纯 asyncio 事件循环：
+# uvloop/httptools 只在 glibc 下有 wheel，musl 下 uv sync 自动跳过它们
+# （uv.lock 的 sys_platform 条件项，非配置缺失，行为与本地 dev 不同属预期）
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1
 
 WORKDIR /app/backend
-# 先拷依赖描述以便利用缓存
-COPY backend/pyproject.toml backend/uv.lock* ./
-RUN uv sync --frozen --no-dev
-
+COPY --from=backend-deps /opt/venv /opt/venv
 COPY backend/ ./
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
