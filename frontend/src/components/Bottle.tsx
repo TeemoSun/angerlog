@@ -182,8 +182,7 @@ export function Bottle({
       </button>
 
       <p className="text-sm text-milk-dim">
-        瓶内 <span className="font-semibold text-star-amber">{count}</span> 颗星星 · 星光{" "}
-        <span className="font-semibold text-star-gold">{percent}%</span>
+        瓶内 <span className="font-semibold text-star-amber">{count}</span> 颗星星
       </p>
     </div>
   );
