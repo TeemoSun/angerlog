@@ -248,32 +248,45 @@ function WheelPicker({
   const scrollTimer = useRef<number | null>(null);
   const [active, setActive] = useState(value);
 
-  // 外部 value 变化（如点此刻）时同步滚动位置
+  // 中间份的起始索引（渲染 3 份实现循环）
+  const midStart = range;
+
+  // 外部 value 变化（如点此刻）时同步滚动到中间份
   useEffect(() => {
     setActive(value);
     const el = listRef.current;
     if (!el) return;
-    el.scrollTo({ top: value * ITEM_H, behavior: "smooth" });
-  }, [value]);
+    el.scrollTo({ top: (midStart + value) * ITEM_H, behavior: "smooth" });
+  }, [value, midStart]);
 
-  // 滚动时更新高亮，停止 150ms 后提交
+  // 滚动时更新高亮；越界则瞬间跳回中间份，实现无缝循环
   const handleScroll = () => {
     const el = listRef.current;
     if (!el) return;
-    const idx = Math.round(el.scrollTop / ITEM_H);
-    if (idx >= 0 && idx < range) {
-      setActive(idx);
-      if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
-      scrollTimer.current = window.setTimeout(() => {
-        onChange(idx);
-      }, 150);
+    let idx = Math.round(el.scrollTop / ITEM_H);
+    if (idx < range) {
+      // 滚到第一份：跳回中间份
+      idx += range;
+      el.scrollTo({ top: idx * ITEM_H });
+    } else if (idx >= range * 2) {
+      // 滚到第三份：跳回中间份
+      idx -= range;
+      el.scrollTo({ top: idx * ITEM_H });
     }
+    const real = idx % range;
+    setActive(real);
+    if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
+    scrollTimer.current = window.setTimeout(() => {
+      onChange(real);
+    }, 150);
   };
 
   const commit = (idx: number) => {
     if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
     setActive(idx);
     onChange(idx);
+    const el = listRef.current;
+    if (el) el.scrollTo({ top: (midStart + idx) * ITEM_H, behavior: "smooth" });
   };
 
   return (
@@ -299,13 +312,14 @@ function WheelPicker({
       >
         {/* 顶部/底部留白让首尾项可居中 */}
         <div style={{ height: ITEM_H }} />
-        {Array.from({ length: range }, (_, i) => {
-          const selected = i === active;
+        {Array.from({ length: range * 3 }, (_, i) => {
+          const real = i % range;
+          const selected = real === active;
           return (
             <button
               type="button"
               key={i}
-              onClick={() => commit(i)}
+              onClick={() => commit(real)}
               style={{ height: ITEM_H }}
               className={cn(
                 "flex w-full snap-center items-center justify-center transition-all duration-200",
@@ -314,7 +328,7 @@ function WheelPicker({
                   : "scale-90 text-sm text-ink/50",
               )}
             >
-              {pad(i)}
+              {pad(real)}
             </button>
           );
         })}

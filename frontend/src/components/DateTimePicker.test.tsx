@@ -57,8 +57,8 @@ describe("DateTimePicker", () => {
     // 选一个远在未来的时刻：23:59（点击滚轮里的对应项）
     const hourBox = screen.getByLabelText("时");
     const minBox = screen.getByLabelText("分");
-    await user.click(within(hourBox).getByText("23"));
-    await user.click(within(minBox).getByText("59"));
+    await user.click(within(hourBox).getAllByText("23")[0]);
+    await user.click(within(minBox).getAllByText("59")[0]);
     // 点确定
     await user.click(screen.getByTestId("dtp-confirm"));
     await waitFor(() => {
