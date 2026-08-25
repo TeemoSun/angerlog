@@ -56,7 +56,7 @@ export function BreathingGuide({ active }: { active: boolean }) {
           animate={{ scale: active ? Math.max(phase.scale - 0.25, 0.5) : 0.4 }}
           transition={{ duration: active ? phase.seconds : 0.3, ease: "easeInOut" }}
         />
-        <span className="absolute text-sm font-semibold text-amber-900">
+        <span className="absolute text-2xl font-semibold text-amber-900">
           {active ? phase.label : "准备"}
         </span>
       </div>
