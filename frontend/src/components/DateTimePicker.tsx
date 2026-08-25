@@ -37,19 +37,18 @@ export function DateTimePicker({
 }) {
   const [viewYear, setViewYear] = useState(value.getFullYear());
   const [viewMonth, setViewMonth] = useState(value.getMonth());
-  const [hour, setHour] = useState(value.getHours());
-  const [minute, setMinute] = useState(value.getMinutes());
 
   useEffect(() => {
     if (open) {
       setViewYear(value.getFullYear());
       setViewMonth(value.getMonth());
-      setHour(value.getHours());
-      setMinute(value.getMinutes());
     }
     // 仅在打开时重置，避免外部 value 变化时抖动
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  const hour = value.getHours();
+  const minute = value.getMinutes();
 
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
@@ -87,9 +86,24 @@ export function DateTimePicker({
 
   const pickDay = (day: number) => {
     const picked = new Date(viewYear, viewMonth, day, hour, minute, 0, 0);
-    if (toLocalMs(picked) <= Date.now()) {
+    if (toLocalMs(picked) > Date.now()) {
+      // 所选时刻尚未到来，钳制为当前时间
+      onChange(new Date());
+    } else {
       onChange(picked);
     }
+  };
+
+  // 改时分时组合新时间并同步到外部 value
+  const setHour = (h: number) => {
+    const picked = new Date(value);
+    picked.setHours(h, minute, 0, 0);
+    onChange(picked);
+  };
+  const setMinute = (m: number) => {
+    const picked = new Date(value);
+    picked.setHours(hour, m, 0, 0);
+    onChange(picked);
   };
 
   const setNow = () => {
@@ -98,6 +112,10 @@ export function DateTimePicker({
   };
 
   const confirm = () => {
+    // 最终值若超过当前时间，钳制为现在，避免后端拒绝未来时间
+    if (toLocalMs(value) > Date.now()) {
+      onChange(new Date());
+    }
     onOpenChange(false);
   };
 
@@ -145,7 +163,7 @@ export function DateTimePicker({
             const key = `${viewYear}-${viewMonth}-${day}`;
             const isToday = key === todayKey;
             const isSelected = key === selectedKey;
-            const cellDate = new Date(viewYear, viewMonth, day, 23, 59, 59);
+            const cellDate = new Date(viewYear, viewMonth, day, 0, 0, 0);
             const isFuture = toLocalMs(cellDate) > Date.now();
             return (
               <button
