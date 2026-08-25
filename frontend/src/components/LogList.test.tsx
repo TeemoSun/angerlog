@@ -46,17 +46,15 @@ describe("LogList 筛选", () => {
     expect(useLogsStore.getState().filters.category).toBe("工作");
   });
 
-  it("重置筛选恢复默认", async () => {
+  it("设置筛选更新状态", async () => {
     const user = userEvent.setup();
     render(
       <LogList logs={logs} onResolve={() => {}} onDelete={() => {}} meta={null} onPageChange={() => {}} />,
     );
     await user.click(screen.getAllByRole("combobox")[0]);
     await user.click(await screen.findByRole("option", { name: "家庭" }));
-    await user.click(screen.getByRole("button", { name: "重置筛选" }));
     const f = useLogsStore.getState().filters;
-    expect(f.category).toBeNull();
-    expect(f.resolved).toBe("all");
+    expect(f.category).toBe("家庭");
   });
 
   it("空列表显示占位文案", () => {

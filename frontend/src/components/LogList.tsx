@@ -47,7 +47,7 @@ function LogCard({
         style={{ backgroundColor: color }}
       />
 
-      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pl-5 pt-5">
+      <CardHeader className="flex flex-col items-start gap-2 space-y-0 pl-5 pt-5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <div
             className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-white shadow-sm"
@@ -149,7 +149,7 @@ export function LogList({
   meta: { page: number; has_next: boolean; total: number } | null;
   onPageChange: (page: number) => void;
 }) {
-  const { filters, setFilter, resetFilters } = useLogsStore();
+  const { filters, setFilter } = useLogsStore();
 
   return (
     <div className="flex flex-col gap-4">
@@ -159,12 +159,12 @@ export function LogList({
         <span className="text-sm text-milk-dim">写下消气原因，封存情绪</span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Select
           value={filters.category ?? "all"}
           onValueChange={(v) => setFilter({ category: v === "all" ? null : v })}
         >
-          <SelectTrigger className="w-28 rounded-full border-glass-border bg-glass text-milk backdrop-blur-xl">
+          <SelectTrigger className="w-28 shrink-0 rounded-full border-glass-border bg-glass text-milk backdrop-blur-xl">
             <SelectValue placeholder="分类" />
           </SelectTrigger>
           <SelectContent className="rounded-xl border-white/10 bg-night-800/95 text-milk backdrop-blur-2xl">
@@ -181,7 +181,7 @@ export function LogList({
           value={filters.resolved}
           onValueChange={(v) => setFilter({ resolved: v as "all" | "resolved" | "unresolved" })}
         >
-          <SelectTrigger className="w-28 rounded-full border-glass-border bg-glass text-milk backdrop-blur-xl">
+          <SelectTrigger className="w-28 shrink-0 rounded-full border-glass-border bg-glass text-milk backdrop-blur-xl">
             <SelectValue placeholder="解决状态" />
           </SelectTrigger>
           <SelectContent className="rounded-xl border-white/10 bg-night-800/95 text-milk backdrop-blur-2xl">
@@ -195,7 +195,7 @@ export function LogList({
           value={filters.intensityMin ? String(filters.intensityMin) : "all"}
           onValueChange={(v) => setFilter({ intensityMin: v === "all" ? null : Number(v) })}
         >
-          <SelectTrigger className="w-32 rounded-full border-glass-border bg-glass text-milk backdrop-blur-xl">
+          <SelectTrigger className="w-32 shrink-0 rounded-full border-glass-border bg-glass text-milk backdrop-blur-xl">
             <SelectValue placeholder="最低程度" />
           </SelectTrigger>
           <SelectContent className="rounded-xl border-white/10 bg-night-800/95 text-milk backdrop-blur-2xl">
@@ -207,15 +207,6 @@ export function LogList({
             ))}
           </SelectContent>
         </Select>
-
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={resetFilters}
-          className="rounded-full text-milk-dim hover:bg-white/5 hover:text-milk"
-        >
-          重置筛选
-        </Button>
       </div>
 
       {logs.length === 0 ? (
