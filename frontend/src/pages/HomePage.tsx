@@ -121,7 +121,7 @@ export function HomePage() {
         </div>
       </header>
 
-      <main className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-24 pt-6 sm:pb-8">
+      <main className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-20 pt-6 sm:pb-8">
         {error && (
           <Card className="relative z-10 mb-4 border-star-red/30 bg-star-red/10">
             <CardContent className="py-3 text-sm text-star-red/90">{error}</CardContent>
