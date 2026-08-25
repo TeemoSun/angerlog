@@ -163,14 +163,14 @@ export function LogFormDialog({
                     type="button"
                     onClick={() => selectIntensity(submitValue)}
                     className={
-                      "flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition " +
+                      "flex items-center gap-2 rounded-2xl border-2 p-3 transition sm:flex-col sm:justify-center " +
                       (selected
                         ? "border-star-amber/60 bg-star-amber/10 shadow-[0_0_18px_rgba(251,191,36,0.15)]"
                         : "border-paper-muted/60 bg-white/70 hover:border-star-amber/40")
                     }
                     data-testid={`mood-${level.label}`}
                   >
-                    <RoundedStar size={32} color={intensityColor(submitValue)} glow />
+                    <RoundedStar size={28} color={intensityColor(submitValue)} glow />
                     <span className="text-sm font-medium text-ink">{level.label}</span>
                   </button>
                 );
