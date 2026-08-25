@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
@@ -54,11 +54,11 @@ describe("DateTimePicker", () => {
       );
     }
     render(<CaptureHarness />);
-    // 选一个远在未来的时刻：23:59
-    const hourSelect = screen.getByLabelText("时");
-    await user.selectOptions(hourSelect, "23");
-    const minuteSelect = screen.getByLabelText("分");
-    await user.selectOptions(minuteSelect, "59");
+    // 选一个远在未来的时刻：23:59（点击滚轮里的对应项）
+    const hourBox = screen.getByLabelText("时");
+    const minBox = screen.getByLabelText("分");
+    await user.click(within(hourBox).getByText("23"));
+    await user.click(within(minBox).getByText("59"));
     // 点确定
     await user.click(screen.getByTestId("dtp-confirm"));
     await waitFor(() => {

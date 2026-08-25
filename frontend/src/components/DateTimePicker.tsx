@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -194,7 +195,6 @@ export function DateTimePicker({
             value={hour}
             onChange={setHour}
             ariaLabel="时"
-            pad2
           />
           <span className="text-lg text-ink-light">:</span>
           <WheelPicker
@@ -202,7 +202,6 @@ export function DateTimePicker({
             value={minute}
             onChange={setMinute}
             ariaLabel="分"
-            pad2
           />
           <span className="ml-1 text-xs text-ink-light">{value.getHours() >= 12 ? "下午" : "上午"}</span>
         </div>
@@ -237,26 +236,77 @@ function WheelPicker({
   value,
   onChange,
   ariaLabel,
-  pad2,
 }: {
   range: number;
   value: number;
   onChange: (v: number) => void;
   ariaLabel: string;
-  pad2: boolean;
 }) {
+  const ITEM_H = 32; // 每项高度 px
+  const VISIBLE = 3; // 可见行数
+  const containerH = ITEM_H * VISIBLE;
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // 选中项滚动居中（带过渡）
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTo({ top: value * ITEM_H, behavior: "smooth" });
+  }, [value]);
+
+  const handleScroll = () => {
+    const el = listRef.current;
+    if (!el) return;
+    const idx = Math.round(el.scrollTop / ITEM_H);
+    if (idx !== value && idx >= 0 && idx < range) {
+      onChange(idx);
+    }
+  };
+
   return (
-    <select
+    <div
+      className="relative overflow-hidden rounded-xl bg-white/70"
+      style={{ height: containerH }}
+      role="listbox"
       aria-label={ariaLabel}
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="appearance-none rounded-lg bg-white/70 px-2 py-1 text-center text-base font-medium text-ink focus:outline-none focus:ring-2 focus:ring-star-amber/50"
     >
-      {Array.from({ length: range }, (_, i) => (
-        <option key={i} value={i}>
-          {pad2 ? pad(i) : i}
-        </option>
-      ))}
-    </select>
+      {/* 选中区高亮条 */}
+      <div
+        className="pointer-events-none absolute left-0 right-0 rounded-lg bg-camel/15"
+        style={{ top: ITEM_H, height: ITEM_H }}
+      />
+      {/* 上下渐隐遮罩 */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-white/80 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/80 to-transparent" />
+      <div
+        ref={listRef}
+        onScroll={handleScroll}
+        className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-none"
+        style={{ scrollbarWidth: "none" }}
+      >
+        {/* 顶部/底部留白让首尾项可居中 */}
+        <div style={{ height: ITEM_H }} />
+        {Array.from({ length: range }, (_, i) => {
+          const selected = i === value;
+          return (
+            <motion.button
+              type="button"
+              key={i}
+              onClick={() => onChange(i)}
+              animate={{ opacity: selected ? 1 : 0.45, scale: selected ? 1 : 0.9 }}
+              transition={{ duration: 0.18 }}
+              style={{ height: ITEM_H }}
+              className={cn(
+                "flex w-full snap-center items-center justify-center text-base font-medium",
+                selected ? "text-camel" : "text-ink",
+              )}
+            >
+              {pad(i)}
+            </motion.button>
+          );
+        })}
+        <div style={{ height: ITEM_H }} />
+      </div>
+    </div>
   );
 }

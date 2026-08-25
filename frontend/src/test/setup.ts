@@ -30,6 +30,14 @@ if (!Element.prototype.releasePointerCapture) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
+// jsdom 的 scrollTo 不支持 options 形式，补一个最小实现
+Element.prototype.scrollTo = function (arg?: number | ScrollToOptions) {
+  if (typeof arg === "number") {
+    this.scrollTop = arg;
+  } else if (arg && typeof arg === "object") {
+    this.scrollTop = arg.top ?? 0;
+  }
+};
 
 if (!("matchMedia" in window)) {
   Object.defineProperty(window, "matchMedia", {
