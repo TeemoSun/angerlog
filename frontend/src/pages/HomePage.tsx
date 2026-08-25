@@ -142,7 +142,7 @@ export function HomePage() {
             {tab === "bottle" && (
               <div className="flex flex-1 flex-col items-center justify-center gap-6">
                 <Bottle logs={logs} onOpenForm={() => setFormOpen(true)} />
-                <div className="grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="grid w-full max-w-2xl grid-cols-3 gap-2 sm:gap-4">
                   <SummaryTile
                     label="今日已记录"
                     value={summary?.total_count != null ? String(summary.total_count) : "—"}
@@ -194,9 +194,9 @@ export function HomePage() {
 function SummaryTile({ label, value }: { label: string; value: string }) {
   return (
     <Card className="border-glass-border bg-glass text-center backdrop-blur-xl">
-      <CardContent className="flex flex-col items-center gap-1 py-4 text-center sm:py-5">
-        <span className="text-xs text-milk-dim">{label}</span>
-        <span className="text-2xl font-bold text-star-amber drop-shadow-sm sm:text-3xl">{value}</span>
+      <CardContent className="flex flex-col items-center gap-1 py-3 text-center sm:py-5">
+        <span className="text-[11px] text-milk-dim sm:text-xs">{label}</span>
+        <span className="text-xl font-bold text-star-amber drop-shadow-sm sm:text-3xl">{value}</span>
       </CardContent>
     </Card>
   );
