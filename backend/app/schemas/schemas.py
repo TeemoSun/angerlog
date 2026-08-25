@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -40,7 +40,7 @@ class LogCreate(BaseModel):
             return v
         if v.tzinfo is None:
             raise ValueError("created_at must be timezone-aware")
-        if v > datetime.now(UTC):
+        if v > datetime.now(UTC) + timedelta(seconds=10):
             raise ValueError("created_at must not be in the future")
         return v.astimezone(UTC)
 
@@ -65,7 +65,7 @@ class LogUpdate(BaseModel):
             return v
         if v.tzinfo is None:
             raise ValueError("resolved_at must be timezone-aware")
-        if v > datetime.now(UTC):
+        if v > datetime.now(UTC) + timedelta(seconds=10):
             raise ValueError("resolved_at must not be in the future")
         return v.astimezone(UTC)
 

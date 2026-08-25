@@ -274,3 +274,18 @@ async def test_resolve_rejects_future_resolved_at(client):
     )
     assert resp.status_code == 400
     assert resp.json()["code"] == 40001
+
+
+async def test_resolve_accepts_small_clock_skew(client):
+    csrf = await _login(client)
+    from datetime import UTC, datetime, timedelta
+
+    log_id = (await _create_log(client, csrf)).json()["data"]["id"]
+    # 客户端时钟比服务器快 5 秒：容忍窗口内应通过
+    skew = (datetime.now(UTC) + timedelta(seconds=5)).isoformat()
+    resp = await client.put(
+        f"/api/v1/logs/{log_id}",
+        json={"is_resolved": True, "resolution_method": "x", "resolved_at": skew},
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert resp.status_code == 200, resp.text
