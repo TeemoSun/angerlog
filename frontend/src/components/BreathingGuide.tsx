@@ -7,32 +7,40 @@ const PHASES = [
   { key: "out", label: "呼气", seconds: 8, scale: 0.8 },
 ] as const;
 
+const RADIUS = 52;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
 export function useBreathingPhase(active: boolean) {
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [cycle, setCycle] = useState(0);
+  const [remaining, setRemaining] = useState<number>(PHASES[0].seconds);
 
   useEffect(() => {
     if (!active) {
       setPhaseIndex(0);
       setCycle(0);
+      setRemaining(PHASES[0].seconds);
       return;
     }
     const timer = setTimeout(() => {
-      if (phaseIndex === PHASES.length - 1) {
-        setCycle((c) => c + 1);
-        setPhaseIndex(0);
+      if (remaining <= 1) {
+        const nextIndex = phaseIndex === PHASES.length - 1 ? 0 : phaseIndex + 1;
+        if (phaseIndex === PHASES.length - 1) setCycle((c) => c + 1);
+        setPhaseIndex(nextIndex);
+        setRemaining(PHASES[nextIndex].seconds);
       } else {
-        setPhaseIndex((i) => i + 1);
+        setRemaining((r) => r - 1);
       }
-    }, PHASES[phaseIndex].seconds * 1000);
+    }, 1000);
     return () => clearTimeout(timer);
-  }, [active, phaseIndex]);
+  }, [active, phaseIndex, remaining]);
 
-  return { phase: PHASES[phaseIndex], cycle };
+  return { phase: PHASES[phaseIndex], cycle, remaining };
 }
 
 export function BreathingGuide({ active }: { active: boolean }) {
-  const { phase, cycle } = useBreathingPhase(active);
+  const { phase, cycle, remaining } = useBreathingPhase(active);
+  const progress = (phase.seconds - remaining) / (phase.seconds - 1);
 
   return (
     <div
@@ -40,7 +48,7 @@ export function BreathingGuide({ active }: { active: boolean }) {
       data-testid="breathing-guide"
     >      <div className="relative flex h-28 w-28 items-center justify-center">
         <motion.div
-          className="absolute inset-0 rounded-full border-2 border-star-amber/40"
+          className="absolute inset-0"
           animate={{
             scale: active ? phase.scale : 0.8,
             opacity: active ? 1 : 0.5,
@@ -50,7 +58,33 @@ export function BreathingGuide({ active }: { active: boolean }) {
             ease: "easeInOut",
           }}
           data-testid="breathing-ring"
-        />
+        >
+          <svg className="h-full w-full -rotate-90" viewBox="0 0 112 112">
+            <circle
+              cx="56"
+              cy="56"
+              r={RADIUS}
+              fill="none"
+              strokeWidth="2.5"
+              stroke="currentColor"
+              className="text-star-amber/25"
+            />
+            <circle
+              key={`${phase.key}-${cycle}`}
+              cx="56"
+              cy="56"
+              r={RADIUS}
+              fill="none"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              stroke="currentColor"
+              className="text-star-amber/80 transition-[stroke-dashoffset] duration-1000 ease-linear"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
+              data-testid="breathing-progress"
+            />
+          </svg>
+        </motion.div>
         <motion.div
           className="h-14 w-14 rounded-full bg-gradient-to-br from-star-gold/40 to-star-amber/30 blur-[2px]"
           animate={{ scale: active ? Math.max(phase.scale - 0.25, 0.5) : 0.4 }}
