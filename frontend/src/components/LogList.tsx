@@ -7,9 +7,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { deleteLogRequest, resolveLogRequest } from "@/lib/requests";
+import { deleteLogRequest } from "@/lib/requests";
 import { useLogsStore } from "@/stores/logs";
 import type { LogItem } from "@/lib/types";
 import { formatDateTime, intensityColor, intensityLabel } from "@/lib/utils";
@@ -17,18 +15,15 @@ import { useState } from "react";
 
 function LogCard({
   log,
-  onResolved,
+  onResolve,
   onDelete,
 }: {
   log: LogItem;
-  onResolved?: (log: LogItem) => void;
+  onResolve: (log: LogItem) => void;
   onDelete: (id: string) => void;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [method, setMethod] = useState("");
-  const [savingInline, setSavingInline] = useState(false);
 
   const doDelete = async () => {
     setDeleting(true);
@@ -91,61 +86,12 @@ function LogCard({
           </p>
         )}
 
-        {/* 未解决时展开写消气原因 */}
-        {!log.is_resolved && expanded && (
-          <div className="flex flex-col gap-2 rounded-xl border border-paper-muted bg-white/60 p-3">
-            <Label htmlFor={`resolve-${log.id}`} className="text-xs text-ink-light">
-              情绪是怎么消解的
-            </Label>
-            <Input
-              id={`resolve-${log.id}`}
-              placeholder="写下这个情绪后来是怎么消失的…"
-              maxLength={500}
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-              className="font-input rounded-xl border-paper-muted/70 bg-white/80 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
-            />
-            <div className="flex justify-end gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setExpanded(false);
-                  setMethod("");
-                }}
-                className="text-ink-light hover:bg-paper-muted hover:text-ink"
-              >
-                取消
-              </Button>
-              <Button
-                size="sm"
-                onClick={async () => {
-                  if (!method.trim()) return;
-                  setSavingInline(true);
-                  try {
-                    const updated = await resolveLogRequest(log.id, method.trim(), new Date().toISOString());
-                    onResolved?.(updated);
-                    setMethod("");
-                    setExpanded(false);
-                  } finally {
-                    setSavingInline(false);
-                  }
-                }}
-                disabled={savingInline}
-                className="rounded-full bg-gradient-to-r from-star-gold to-star-orange text-white"
-              >
-                {savingInline ? "保存中…" : "保存"}
-              </Button>
-            </div>
-          </div>
-        )}
-
         <div className="mt-1 flex items-center gap-2">
-          {!log.is_resolved && !expanded && (
+          {!log.is_resolved && (
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => setExpanded(true)}
+              onClick={() => onResolve(log)}
               className="rounded-full bg-paper-muted text-ink hover:bg-paper-muted/80"
             >
               写下消气原因
@@ -192,13 +138,13 @@ function LogCard({
 
 export function LogList({
   logs,
-  onResolved,
+  onResolve,
   onDelete,
   meta,
   onPageChange,
 }: {
   logs: LogItem[];
-  onResolved?: (log: LogItem) => void;
+  onResolve: (log: LogItem) => void;
   onDelete: (id: string) => void;
   meta: { page: number; has_next: boolean; total: number } | null;
   onPageChange: (page: number) => void;
@@ -281,7 +227,7 @@ export function LogList({
       ) : (
         <div className="flex flex-col gap-4">
           {logs.map((log) => (
-            <LogCard key={log.id} log={log} onResolved={onResolved} onDelete={onDelete} />
+            <LogCard key={log.id} log={log} onResolve={onResolve} onDelete={onDelete} />
           ))}
         </div>
       )}

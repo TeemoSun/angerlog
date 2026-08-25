@@ -36,7 +36,7 @@ describe("LogList 筛选", () => {
   it("按分类筛选", async () => {
     const user = userEvent.setup();
     render(
-      <LogList logs={logs} onResolved={() => {}} onDelete={() => {}} meta={null} onPageChange={() => {}} />,
+      <LogList logs={logs} onResolve={() => {}} onDelete={() => {}} meta={null} onPageChange={() => {}} />,
     );
     expect(screen.getByText("会议取消")).toBeInTheDocument();
     expect(screen.getByText("堵车")).toBeInTheDocument();
@@ -49,7 +49,7 @@ describe("LogList 筛选", () => {
   it("重置筛选恢复默认", async () => {
     const user = userEvent.setup();
     render(
-      <LogList logs={logs} onResolved={() => {}} onDelete={() => {}} meta={null} onPageChange={() => {}} />,
+      <LogList logs={logs} onResolve={() => {}} onDelete={() => {}} meta={null} onPageChange={() => {}} />,
     );
     await user.click(screen.getAllByRole("combobox")[0]);
     await user.click(await screen.findByRole("option", { name: "家庭" }));
@@ -61,7 +61,7 @@ describe("LogList 筛选", () => {
 
   it("空列表显示占位文案", () => {
     render(
-      <LogList logs={[]} onResolved={() => {}} onDelete={() => {}} meta={null} onPageChange={() => {}} />,
+      <LogList logs={[]} onResolve={() => {}} onDelete={() => {}} meta={null} onPageChange={() => {}} />,
     );
     expect(screen.getByText(/瓶子里还空着/)).toBeInTheDocument();
   });

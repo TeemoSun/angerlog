@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Bottle } from "@/components/Bottle";
 import { LogFormDialog } from "@/components/LogFormDialog";
 import { LogList } from "@/components/LogList";
+import { ResolveDialog } from "@/components/ResolveDialog";
 import { StatsPanel } from "@/components/StatsPanel";
 import { TabBar, type TabKey } from "@/components/TabBar";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export function HomePage() {
   const [page, setPage] = useState(1);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [resolveTarget, setResolveTarget] = useState<LogItem | null>(null);
   const [error, setError] = useState("");
   const { filters } = useLogsStore();
   const navigate = useNavigate();
@@ -165,7 +167,7 @@ export function HomePage() {
               <LogList
                 logs={logs}
                 meta={meta}
-                onResolved={handleResolved}
+                onResolve={(log) => setResolveTarget(log)}
                 onDelete={handleDeleted}
                 onPageChange={setPage}
               />
@@ -177,6 +179,14 @@ export function HomePage() {
       </main>
 
       <LogFormDialog open={formOpen} onOpenChange={setFormOpen} onCreated={handleCreated} />
+      <ResolveDialog
+        log={resolveTarget}
+        onClose={() => setResolveTarget(null)}
+        onResolved={(updated: LogItem) => {
+          handleResolved(updated);
+          setResolveTarget(null);
+        }}
+      />
     </div>
   );
 }
