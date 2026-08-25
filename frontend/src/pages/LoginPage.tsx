@@ -59,7 +59,7 @@ export function LoginPage() {
             >
               🫙
             </motion.div>
-            <CardTitle className="font-hand text-4xl font-normal tracking-wide text-ink">
+            <CardTitle className="text-4xl font-normal tracking-wide text-ink">
               情绪瓶
             </CardTitle>
             <CardDescription className="mt-2 text-ink-light">

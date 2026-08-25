@@ -96,7 +96,7 @@ export function LogFormDialog({
     >
       <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[2.25rem] border-paper-muted/50 bg-paper text-ink">
         <DialogHeader className="text-center sm:text-left">
-          <DialogTitle className="font-hand text-2xl font-normal text-ink">今天的心情</DialogTitle>
+          <DialogTitle className="text-2xl font-normal text-ink">今天的心情</DialogTitle>
           <DialogDescription className="text-ink-light">
             写下来，折成一颗星星投进瓶中
           </DialogDescription>
@@ -117,7 +117,7 @@ export function LogFormDialog({
               maxLength={500}
               {...register("trigger_reason")}
               aria-invalid={!!errors.trigger_reason}
-              className="min-h-[100px] rounded-2xl border-none bg-transparent px-1 text-ink shadow-none placeholder:text-ink-light/60 focus-visible:ring-0"
+              className="font-input min-h-[100px] rounded-2xl border-none bg-transparent px-1 text-ink shadow-none placeholder:text-ink-light/60 focus-visible:ring-0"
             />
             {errors.trigger_reason && (
               <p className="text-xs text-star-crimson" role="alert">

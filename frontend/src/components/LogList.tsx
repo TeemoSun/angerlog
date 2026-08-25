@@ -60,7 +60,7 @@ export function ResolveDialog({
     <Dialog open={!!log} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="border-paper-muted/50 bg-paper text-ink">
         <DialogHeader className="text-center sm:text-left">
-          <DialogTitle className="font-hand text-2xl font-normal text-ink">写下消气原因</DialogTitle>
+          <DialogTitle className="text-2xl font-normal text-ink">写下消气原因</DialogTitle>
           <DialogDescription className="text-ink-light">
             情绪是怎么消解的？
           </DialogDescription>
@@ -163,12 +163,12 @@ function LogCard({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3 pl-5 pr-5 pb-5">
-        <p className="text-sm leading-relaxed text-ink">{log.trigger_reason}</p>
+        <p className="font-input text-sm leading-relaxed text-ink">{log.trigger_reason}</p>
 
         {log.is_resolved && log.resolution_method && (
           <div className="rounded-xl border border-star-amber/20 bg-star-gold/10 px-3 py-2.5">
             <p className="mb-1 text-xs font-medium text-amber-700">情绪是怎么消解的</p>
-            <p className="text-sm text-amber-800/90">{log.resolution_method}</p>
+            <p className="font-input text-sm text-amber-800/90">{log.resolution_method}</p>
           </div>
         )}
 
@@ -190,7 +190,7 @@ function LogCard({
               maxLength={500}
               value={method}
               onChange={(e) => setMethod(e.target.value)}
-              className="rounded-xl border-paper-muted/70 bg-white/80 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
+              className="font-input rounded-xl border-paper-muted/70 bg-white/80 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
             />
             <div className="flex justify-end gap-2">
               <Button
@@ -296,7 +296,7 @@ export function LogList({
     <div className="flex flex-col gap-4">
       {/* 顶部标题 */}
       <div className="mb-1 flex items-center gap-2">
-        <h2 className="font-hand text-2xl text-paper">瓶中信件</h2>
+        <h2 className="text-2xl text-paper">瓶中信件</h2>
         <span className="text-sm text-milk-dim">写下消气原因，封存情绪</span>
       </div>
 

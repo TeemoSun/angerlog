@@ -109,7 +109,7 @@ export function HomePage() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-2.5">
             <span className="text-2xl drop-shadow-md">🫙</span>
-            <h1 className="font-hand text-2xl font-normal tracking-wide text-paper">情绪瓶</h1>
+            <h1 className="text-2xl font-normal tracking-wide text-paper">情绪瓶</h1>
           </div>
           <TabBar active={tab} onChange={setTab} />
           <Button

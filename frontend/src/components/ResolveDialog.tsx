@@ -57,7 +57,7 @@ export function ResolveDialog({
     <Dialog open={!!log} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="border-paper-muted/50 bg-paper text-ink">
         <DialogHeader className="text-center sm:text-left">
-          <DialogTitle className="font-hand text-2xl font-normal text-ink">
+          <DialogTitle className="text-2xl font-normal text-ink">
             写下消气原因
           </DialogTitle>
           <DialogDescription className="text-ink-light">
@@ -74,7 +74,7 @@ export function ResolveDialog({
             maxLength={500}
             value={method}
             onChange={(e) => setMethod(e.target.value)}
-            className="rounded-xl border-paper-muted/70 bg-white/60 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
+            className="font-input rounded-xl border-paper-muted/70 bg-white/60 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
           />
           {error && (
             <p className="text-xs text-star-crimson" role="alert">

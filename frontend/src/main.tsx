@@ -1,4 +1,5 @@
 import "@fontsource-variable/noto-sans-sc";
+import "@fontsource-variable/noto-serif-sc";
 import React from "react";
 import ReactDOM from "react-dom/client";
 

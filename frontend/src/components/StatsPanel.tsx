@@ -91,7 +91,7 @@ export function StatsPanel() {
       <Card className="border-glass-border bg-glass backdrop-blur-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="font-hand text-xl text-paper">趋势</CardTitle>
+            <CardTitle className="text-xl text-paper">趋势</CardTitle>
             <CardDescription>本周期内记录次数</CardDescription>
           </div>
           <div className="flex gap-1 rounded-full border border-glass-border bg-glass p-1">
@@ -151,7 +151,7 @@ export function StatsPanel() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="border-glass-border bg-glass backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="font-hand text-xl text-paper">分类分布</CardTitle>
+            <CardTitle className="text-xl text-paper">分类分布</CardTitle>
             <CardDescription>各类别的记录次数</CardDescription>
           </CardHeader>
           <CardContent>
@@ -192,7 +192,7 @@ export function StatsPanel() {
 
         <Card className="border-glass-border bg-glass backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="font-hand text-xl text-paper">高频时段</CardTitle>
+            <CardTitle className="text-xl text-paper">高频时段</CardTitle>
             <CardDescription>星期 × 小时 · 按用户时区</CardDescription>
           </CardHeader>
           <CardContent>
