@@ -210,7 +210,7 @@ function LogCard({
                   if (!method.trim()) return;
                   setSavingInline(true);
                   try {
-                    const updated = await resolveLogRequest(log.id, method.trim());
+                    const updated = await resolveLogRequest(log.id, method.trim(), new Date().toISOString());
                     onResolved?.(updated);
                     setMethod("");
                     setExpanded(false);

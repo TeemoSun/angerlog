@@ -70,7 +70,17 @@ describe("LogFormDialog", () => {
       trigger_reason: "堵车一小时",
       intensity: 5,
     });
+    expect(mockCreate.mock.calls[0][0].created_at).toBeTypeOf("string");
     await waitFor(() => expect(onCreated).toHaveBeenCalled());
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("点击时间可打开时间选择弹窗", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+    await user.click(screen.getByTestId("log-form-date"));
+    expect(await screen.findByText("选择生气时间")).toBeInTheDocument();
+    expect(screen.getByTestId("dtp-grid")).toBeInTheDocument();
+    expect(screen.getByTestId("dtp-confirm")).toBeInTheDocument();
   });
 });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { DateTimePicker } from "@/components/DateTimePicker";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,10 +28,13 @@ export function ResolveDialog({
   const [method, setMethod] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [resolvedAt, setResolvedAt] = useState<Date>(new Date());
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
     setMethod("");
     setError("");
+    setResolvedAt(new Date());
   }, [log?.id]);
 
   const submit = async () => {
@@ -42,7 +46,7 @@ export function ResolveDialog({
     setError("");
     setSubmitting(true);
     try {
-      const updated = await resolveLogRequest(log.id, method.trim());
+      const updated = await resolveLogRequest(log.id, method.trim(), resolvedAt.toISOString());
       setMethod("");
       onResolved(updated);
       onClose();
@@ -52,6 +56,11 @@ export function ResolveDialog({
       setSubmitting(false);
     }
   };
+
+  const timeText = `${String(resolvedAt.getHours()).padStart(2, "0")}:${String(
+    resolvedAt.getMinutes(),
+  ).padStart(2, "0")}`;
+  const dateText = `${resolvedAt.getFullYear()} 年 ${resolvedAt.getMonth() + 1} 月 ${resolvedAt.getDate()} 日`;
 
   return (
     <Dialog open={!!log} onOpenChange={(o) => !o && onClose()}>
@@ -76,6 +85,17 @@ export function ResolveDialog({
             onChange={(e) => setMethod(e.target.value)}
             className="font-input rounded-xl border-paper-muted/70 bg-white/60 text-ink placeholder:text-ink-light/60 focus-visible:ring-star-amber/70"
           />
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="flex items-baseline gap-2 text-left text-xs tracking-wide text-ink-light transition hover:text-ink"
+            data-testid="resolve-form-date"
+            aria-label="选择解决时间"
+          >
+            <span>{dateText}</span>
+            <span className="text-ink-light/80">{timeText}</span>
+            <span className="text-[10px] text-star-amber/70">▾ 选择</span>
+          </button>
           {error && (
             <p className="text-xs text-star-crimson" role="alert">
               {error}
@@ -98,6 +118,13 @@ export function ResolveDialog({
             {submitting ? "保存中…" : "保存"}
           </Button>
         </DialogFooter>
+        <DateTimePicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          value={resolvedAt}
+          onChange={setResolvedAt}
+          title="选择解决时间"
+        />
       </DialogContent>
     </Dialog>
   );

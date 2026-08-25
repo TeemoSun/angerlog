@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { BreathingGuide } from "@/components/BreathingGuide";
+import { DateTimePicker } from "@/components/DateTimePicker";
 import { RoundedStar } from "@/components/Star";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +40,7 @@ const schema = z.object({
     .max(500, "原因最多 500 字"),
   intensity: z.number().min(1).max(10),
   category: z.string().nullable(),
+  created_at: z.date(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -61,19 +63,26 @@ export function LogFormDialog({
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { trigger_reason: "", intensity: 5, category: null },
+    defaultValues: { trigger_reason: "", intensity: 5, category: null, created_at: new Date() },
   });
 
   const intensity = watch("intensity");
   const category = watch("category");
+  const createdAt = watch("created_at");
   const high = intensity >= 8;
   const [submitError, setSubmitError] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const onSubmit = async (values: FormValues) => {
     setSubmitError("");
     try {
-      const log = await createLogRequest(values);
-      reset();
+      const log = await createLogRequest({
+        trigger_reason: values.trigger_reason,
+        intensity: values.intensity,
+        category: values.category,
+        created_at: values.created_at.toISOString(),
+      });
+      reset({ trigger_reason: "", intensity: 5, category: null, created_at: new Date() });
       onOpenChange(false);
       onCreated(log);
     } catch (err) {
@@ -83,14 +92,17 @@ export function LogFormDialog({
 
   const selectIntensity = (value: number) => setValue("intensity", value, { shouldValidate: true });
 
-  const today = new Date();
-  const dateText = `${today.getFullYear()} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+  const dateText = `${createdAt.getFullYear()} 年 ${createdAt.getMonth() + 1} 月 ${createdAt.getDate()} 日`;
+  const timeText = `${String(createdAt.getHours()).padStart(2, "0")}:${String(
+    createdAt.getMinutes(),
+  ).padStart(2, "0")}`;
 
   return (
     <Dialog
       open={open}
       onOpenChange={(o) => {
-        if (!o) reset();
+        if (!o)
+          reset({ trigger_reason: "", intensity: 5, category: null, created_at: new Date() });
         onOpenChange(o);
       }}
     >
@@ -104,7 +116,17 @@ export function LogFormDialog({
 
         {/* 日期区 + 极细浅棕分割线 */}
         <div className="flex flex-col gap-3">
-          <p className="text-xs tracking-wide text-ink-light">{dateText}</p>
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="flex items-baseline gap-2 text-left text-xs tracking-wide text-ink-light transition hover:text-ink"
+            data-testid="log-form-date"
+            aria-label="选择记录时间"
+          >
+            <span>{dateText}</span>
+            <span className="text-ink-light/80">{timeText}</span>
+            <span className="text-[10px] text-star-amber/70">▾ 选择</span>
+          </button>
           <div className="h-px w-full bg-paper-muted" />
         </div>
 
@@ -206,6 +228,13 @@ export function LogFormDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+      <DateTimePicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        value={createdAt}
+        onChange={(d) => setValue("created_at", d, { shouldValidate: true })}
+        title="选择生气时间"
+      />
     </Dialog>
   );
 }

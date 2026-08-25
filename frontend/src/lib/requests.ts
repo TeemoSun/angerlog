@@ -32,15 +32,21 @@ export async function createLogRequest(body: {
   trigger_reason: string;
   intensity: number;
   category: string | null;
+  created_at?: string;
 }): Promise<LogItem> {
   const res = await api.post<Envelope<LogItem>>("/logs", body);
   return unwrap(res.data);
 }
 
-export async function resolveLogRequest(id: string, resolution_method: string): Promise<LogItem> {
+export async function resolveLogRequest(
+  id: string,
+  resolution_method: string,
+  resolved_at?: string,
+): Promise<LogItem> {
   const res = await api.put<Envelope<LogItem>>(`/logs/${id}`, {
     is_resolved: true,
     resolution_method,
+    resolved_at,
   });
   return unwrap(res.data);
 }

@@ -179,3 +179,98 @@ async def test_update_missing_returns_404(client):
         headers={"X-CSRF-Token": csrf},
     )
     assert resp.status_code == 404
+
+
+async def test_create_log_with_custom_created_at(client):
+    csrf = await _login(client)
+    from datetime import UTC, datetime, timedelta
+
+    when = (datetime.now(UTC) - timedelta(days=2)).isoformat()
+    resp = await client.post(
+        "/api/v1/logs",
+        json={
+            "trigger_reason": "昨天的事",
+            "intensity": 6,
+            "category": "工作",
+            "created_at": when,
+        },
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    created = data["created_at"]
+    # 保留为指定日期（前后误差容忍 5 秒）
+    parsed = datetime.fromisoformat(created.replace("Z", "+00:00"))
+    assert abs((parsed - datetime.fromisoformat(when.replace("Z", "+00:00"))).total_seconds()) <= 5
+    assert data["updated_at"] == created
+
+
+async def test_create_log_rejects_future_created_at(client):
+    csrf = await _login(client)
+    from datetime import UTC, datetime, timedelta
+
+    future = (datetime.now(UTC) + timedelta(days=1)).isoformat()
+    resp = await _create_log(client, csrf)
+    # 带未来时间应被拒绝
+    resp = await client.post(
+        "/api/v1/logs",
+        json={
+            "trigger_reason": "未来",
+            "intensity": 5,
+            "created_at": future,
+        },
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert resp.status_code == 400
+    assert resp.json()["code"] == 40001
+
+
+async def test_create_log_rejects_naive_created_at(client):
+    csrf = await _login(client)
+    resp = await client.post(
+        "/api/v1/logs",
+        json={
+            "trigger_reason": "无时区",
+            "intensity": 5,
+            "created_at": "2026-01-01T00:00:00",
+        },
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert resp.status_code == 400
+    assert resp.json()["code"] == 40001
+
+
+async def test_resolve_with_custom_resolved_at(client):
+    csrf = await _login(client)
+    from datetime import UTC, datetime, timedelta
+
+    log_id = (await _create_log(client, csrf)).json()["data"]["id"]
+    when = (datetime.now(UTC) - timedelta(hours=3)).isoformat()
+
+    resp = await client.put(
+        f"/api/v1/logs/{log_id}",
+        json={"is_resolved": True, "resolution_method": "散步", "resolved_at": when},
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    assert data["is_resolved"] is True
+    parsed = datetime.fromisoformat(data["resolved_at"].replace("Z", "+00:00"))
+    expected = datetime.fromisoformat(when.replace("Z", "+00:00"))
+    assert abs((parsed - expected).total_seconds()) <= 5
+    assert data["updated_at"] == data["resolved_at"]
+
+
+async def test_resolve_rejects_future_resolved_at(client):
+    csrf = await _login(client)
+    from datetime import UTC, datetime, timedelta
+
+    log_id = (await _create_log(client, csrf)).json()["data"]["id"]
+    future = (datetime.now(UTC) + timedelta(days=1)).isoformat()
+    resp = await client.put(
+        f"/api/v1/logs/{log_id}",
+        json={"is_resolved": True, "resolution_method": "x", "resolved_at": future},
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert resp.status_code == 400
+    assert resp.json()["code"] == 40001

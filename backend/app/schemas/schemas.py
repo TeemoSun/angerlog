@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -16,6 +16,7 @@ class LogCreate(BaseModel):
     trigger_reason: str = Field(min_length=1, max_length=500)
     intensity: int = Field(ge=1, le=10)
     category: str | None = Field(default=None, max_length=20)
+    created_at: datetime | None = None
 
     @field_validator("trigger_reason")
     @classmethod
@@ -32,10 +33,22 @@ class LogCreate(BaseModel):
             raise ValueError(f"category must be one of {list(CATEGORIES)}")
         return v
 
+    @field_validator("created_at")
+    @classmethod
+    def normalize_created_at(cls, v: datetime | None) -> datetime | None:
+        if v is None:
+            return v
+        if v.tzinfo is None:
+            raise ValueError("created_at must be timezone-aware")
+        if v > datetime.now(UTC):
+            raise ValueError("created_at must not be in the future")
+        return v.astimezone(UTC)
+
 
 class LogUpdate(BaseModel):
     is_resolved: bool = False
     resolution_method: str | None = Field(default=None, max_length=500)
+    resolved_at: datetime | None = None
 
     @field_validator("resolution_method")
     @classmethod
@@ -44,6 +57,17 @@ class LogUpdate(BaseModel):
             return v
         v = v.strip()
         return v or None
+
+    @field_validator("resolved_at")
+    @classmethod
+    def normalize_resolved_at(cls, v: datetime | None) -> datetime | None:
+        if v is None:
+            return v
+        if v.tzinfo is None:
+            raise ValueError("resolved_at must be timezone-aware")
+        if v > datetime.now(UTC):
+            raise ValueError("resolved_at must not be in the future")
+        return v.astimezone(UTC)
 
 
 class LogOut(BaseModel):

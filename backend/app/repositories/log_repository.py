@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -19,6 +19,9 @@ async def create_log(db: AsyncSession, user_id: UUID, data: LogCreate) -> AngerL
         intensity=data.intensity,
         category=data.category,
     )
+    if data.created_at is not None:
+        log.created_at = data.created_at
+        log.updated_at = data.created_at
     db.add(log)
     await db.commit()
     await db.refresh(log)
@@ -68,7 +71,7 @@ async def list_logs(
 
 
 async def update_log(db: AsyncSession, log: AngerLog, data: LogUpdate) -> AngerLog:
-    now = datetime.now()
+    now = data.resolved_at or datetime.now(UTC)
     if data.is_resolved and not log.is_resolved:
         log.is_resolved = True
         log.resolved_at = now
@@ -93,6 +96,6 @@ async def soft_delete_log(db: AsyncSession, log_id: UUID, user_id: UUID) -> bool
     if log is None:
         return False
     log.is_deleted = True
-    log.updated_at = datetime.now()
+    log.updated_at = datetime.now(UTC)
     await db.commit()
     return True
