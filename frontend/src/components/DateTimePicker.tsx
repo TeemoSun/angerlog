@@ -1,5 +1,4 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -189,14 +188,14 @@ export function DateTimePicker({
         </div>
 
         {/* 时间选择 */}
-        <div className="flex items-center justify-center gap-2 rounded-2xl bg-paper-muted/60 py-2.5">
+        <div className="flex items-center justify-center gap-3 rounded-2xl bg-paper-muted/60 py-3">
           <WheelPicker
             range={24}
             value={hour}
             onChange={setHour}
             ariaLabel="时"
           />
-          <span className="text-lg text-ink-light">:</span>
+          <span className="text-2xl font-light text-ink-light">:</span>
           <WheelPicker
             range={60}
             value={minute}
@@ -242,67 +241,81 @@ function WheelPicker({
   onChange: (v: number) => void;
   ariaLabel: string;
 }) {
-  const ITEM_H = 32; // 每项高度 px
-  const VISIBLE = 3; // 可见行数
+  const ITEM_H = 40; // 每项高度 px
+  const VISIBLE = 5; // 可见行数
   const containerH = ITEM_H * VISIBLE;
   const listRef = useRef<HTMLDivElement>(null);
+  const scrollTimer = useRef<number | null>(null);
+  const [active, setActive] = useState(value);
 
-  // 选中项滚动居中（带过渡）
+  // 外部 value 变化（如点此刻）时同步滚动位置
   useEffect(() => {
+    setActive(value);
     const el = listRef.current;
     if (!el) return;
     el.scrollTo({ top: value * ITEM_H, behavior: "smooth" });
   }, [value]);
 
+  // 滚动时更新高亮，停止 150ms 后提交
   const handleScroll = () => {
     const el = listRef.current;
     if (!el) return;
     const idx = Math.round(el.scrollTop / ITEM_H);
-    if (idx !== value && idx >= 0 && idx < range) {
-      onChange(idx);
+    if (idx >= 0 && idx < range) {
+      setActive(idx);
+      if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
+      scrollTimer.current = window.setTimeout(() => {
+        onChange(idx);
+      }, 150);
     }
+  };
+
+  const commit = (idx: number) => {
+    if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
+    setActive(idx);
+    onChange(idx);
   };
 
   return (
     <div
-      className="relative overflow-hidden rounded-xl bg-white/70"
-      style={{ height: containerH }}
+      className="relative overflow-hidden rounded-2xl bg-white/70"
+      style={{ height: containerH, width: 64 }}
       role="listbox"
       aria-label={ariaLabel}
     >
       {/* 选中区高亮条 */}
       <div
-        className="pointer-events-none absolute left-0 right-0 rounded-lg bg-camel/15"
+        className="pointer-events-none absolute left-1 right-1 rounded-xl bg-camel/20"
         style={{ top: ITEM_H, height: ITEM_H }}
       />
       {/* 上下渐隐遮罩 */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-white/80 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/80 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-white/90 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white/90 to-transparent" />
       <div
         ref={listRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-none"
+        className="h-full overflow-y-auto snap-y snap-mandatory"
         style={{ scrollbarWidth: "none" }}
       >
         {/* 顶部/底部留白让首尾项可居中 */}
         <div style={{ height: ITEM_H }} />
         {Array.from({ length: range }, (_, i) => {
-          const selected = i === value;
+          const selected = i === active;
           return (
-            <motion.button
+            <button
               type="button"
               key={i}
-              onClick={() => onChange(i)}
-              animate={{ opacity: selected ? 1 : 0.45, scale: selected ? 1 : 0.9 }}
-              transition={{ duration: 0.18 }}
+              onClick={() => commit(i)}
               style={{ height: ITEM_H }}
               className={cn(
-                "flex w-full snap-center items-center justify-center text-base font-medium",
-                selected ? "text-camel" : "text-ink",
+                "flex w-full snap-center items-center justify-center transition-all duration-200",
+                selected
+                  ? "scale-110 text-lg font-semibold text-camel"
+                  : "scale-90 text-sm text-ink/50",
               )}
             >
               {pad(i)}
-            </motion.button>
+            </button>
           );
         })}
         <div style={{ height: ITEM_H }} />
