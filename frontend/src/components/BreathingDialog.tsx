@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { BreathingGuide } from "@/components/BreathingGuide";
+import { BreathingGuide, breathingFrameClass } from "@/components/BreathingGuide";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -66,12 +66,14 @@ export function BreathingDialog({ open, onOpenChange }: { open: boolean; onOpenC
                 跟着呼吸的节奏，一起放松下来
               </DialogDescription>
             </DialogHeader>
-            <p
-              className="text-center text-6xl font-semibold text-star-amber"
-              data-testid="breathing-countdown"
-            >
-              {countdown}
-            </p>
+            <div className={breathingFrameClass}>
+              <p
+                className="text-6xl font-semibold text-star-amber"
+                data-testid="breathing-countdown"
+              >
+                {countdown}
+              </p>
+            </div>
           </>
         ) : (
           <>

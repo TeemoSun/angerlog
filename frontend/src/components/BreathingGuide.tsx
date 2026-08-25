@@ -10,6 +10,9 @@ const PHASES = [
 const RADIUS = 52;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
+export const breathingFrameClass =
+  "flex h-[172px] flex-col items-center justify-center gap-3 rounded-2xl border border-star-amber/20 bg-gradient-to-b from-star-gold/10 to-star-amber/10 p-4 text-amber-900/80";
+
 export function useBreathingPhase(active: boolean) {
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [cycle, setCycle] = useState(0);
@@ -51,7 +54,7 @@ export function BreathingGuide({ active }: { active: boolean }) {
 
   return (
     <div
-      className="flex flex-col items-center gap-3 rounded-2xl border border-star-amber/20 bg-gradient-to-b from-star-gold/10 to-star-amber/10 p-4 text-amber-900/80"
+      className={breathingFrameClass}
       data-testid="breathing-guide"
     >      <div className="relative flex h-28 w-28 items-center justify-center">
         <motion.div
