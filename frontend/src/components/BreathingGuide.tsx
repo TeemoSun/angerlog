@@ -1,10 +1,10 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 const PHASES = [
-  { key: "in", label: "吸气", seconds: 4, scale: 1.3, color: "text-star-gold/80", doneColor: "text-star-gold/60" },
-  { key: "hold", label: "屏息", seconds: 7, scale: 1.3, color: "text-star-amber/80", doneColor: "text-star-amber/60" },
-  { key: "out", label: "呼气", seconds: 8, scale: 0.8, color: "text-star-orange/80", doneColor: "text-star-orange/60" },
+  { key: "in", label: "吸气", seconds: 4, scale: 1.3, color: "#f6d365" },
+  { key: "hold", label: "屏息", seconds: 7, scale: 1.3, color: "#fbbf24" },
+  { key: "out", label: "呼气", seconds: 8, scale: 0.8, color: "#fb923c" },
 ] as const;
 
 const RADIUS = 52;
@@ -13,19 +13,19 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 export function useBreathingPhase(active: boolean) {
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [cycle, setCycle] = useState(0);
-  const [remaining, setRemaining] = useState<number>(PHASES[0].seconds);
+  const [tick, setTick] = useState(0);
   const [completed, setCompleted] = useState<string[]>([]);
 
   useEffect(() => {
     if (!active) {
       setPhaseIndex(0);
       setCycle(0);
-      setRemaining(PHASES[0].seconds);
+      setTick(0);
       setCompleted([]);
       return;
     }
     const timer = setTimeout(() => {
-      if (remaining <= 1) {
+      if (tick + 1 >= PHASES[phaseIndex].seconds) {
         const nextIndex = phaseIndex === PHASES.length - 1 ? 0 : phaseIndex + 1;
         if (phaseIndex === PHASES.length - 1) {
           setCycle((c) => c + 1);
@@ -34,20 +34,20 @@ export function useBreathingPhase(active: boolean) {
           setCompleted((done) => [...done, PHASES[phaseIndex].key]);
         }
         setPhaseIndex(nextIndex);
-        setRemaining(PHASES[nextIndex].seconds);
+        setTick(0);
       } else {
-        setRemaining((r) => r - 1);
+        setTick((t) => t + 1);
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [active, phaseIndex, remaining]);
+  }, [active, phaseIndex, tick]);
 
-  return { phase: PHASES[phaseIndex], cycle, remaining, completed };
+  const phase = PHASES[phaseIndex];
+  return { phase, cycle, progress: tick / phase.seconds, completed };
 }
 
 export function BreathingGuide({ active }: { active: boolean }) {
-  const { phase, cycle, remaining, completed } = useBreathingPhase(active);
-  const progress = (phase.seconds - remaining) / (phase.seconds - 1);
+  const { phase, cycle, progress, completed } = useBreathingPhase(active);
 
   return (
     <div
@@ -76,25 +76,29 @@ export function BreathingGuide({ active }: { active: boolean }) {
               stroke="currentColor"
               className="text-star-amber/25"
             />
-            {active &&
-              completed.map((key) => {
-                const done = PHASES.find((p) => p.key === key)!;
-                return (
-                  <circle
-                    key={`${key}-${cycle}`}
-                    cx="56"
-                    cy="56"
-                    r={RADIUS}
-                    fill="none"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    stroke="currentColor"
-                    className={done.doneColor}
-                    strokeDasharray={CIRCUMFERENCE}
-                    strokeDashoffset={0}
-                  />
-                );
-              })}
+            {active && (
+              <AnimatePresence>
+                {completed.map((key) => {
+                  const done = PHASES.find((p) => p.key === key)!;
+                  return (
+                    <motion.circle
+                      key={`${key}-${cycle}`}
+                      cx="56"
+                      cy="56"
+                      r={RADIUS}
+                      fill="none"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      stroke={done.color}
+                      strokeDasharray={CIRCUMFERENCE}
+                      strokeDashoffset={0}
+                      style={{ opacity: 0.45 }}
+                      exit={{ opacity: 0, transition: { duration: 1.2 } }}
+                    />
+                  );
+                })}
+              </AnimatePresence>
+            )}
             {active && (
               <circle
                 key={`${phase.key}-${cycle}`}
@@ -104,10 +108,12 @@ export function BreathingGuide({ active }: { active: boolean }) {
                 fill="none"
                 strokeWidth="2.5"
                 strokeLinecap="round"
-                stroke="currentColor"
-                className={`${phase.color} transition-[stroke-dashoffset] duration-1000 ease-linear`}
+                stroke={phase.color}
                 strokeDasharray={CIRCUMFERENCE}
                 strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
+                style={{
+                  transition: "stroke-dashoffset 1000ms linear, stroke 800ms ease",
+                }}
                 data-testid="breathing-progress"
               />
             )}
