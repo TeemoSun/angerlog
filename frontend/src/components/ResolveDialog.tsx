@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { errorMessage } from "@/lib/api";
 import { resolveLogRequest } from "@/lib/requests";
 import type { LogItem } from "@/lib/types";
+import { appTimezone, wallParts } from "@/lib/utils";
 
 export function ResolveDialog({
   log,
@@ -57,10 +58,11 @@ export function ResolveDialog({
     }
   };
 
-  const timeText = `${String(resolvedAt.getHours()).padStart(2, "0")}:${String(
-    resolvedAt.getMinutes(),
+  const resolvedAtWall = wallParts(resolvedAt, appTimezone());
+  const timeText = `${String(resolvedAtWall.hour).padStart(2, "0")}:${String(
+    resolvedAtWall.minute,
   ).padStart(2, "0")}`;
-  const dateText = `${resolvedAt.getFullYear()} 年 ${resolvedAt.getMonth() + 1} 月 ${resolvedAt.getDate()} 日`;
+  const dateText = `${resolvedAtWall.year} 年 ${resolvedAtWall.month} 月 ${resolvedAtWall.day} 日`;
 
   return (
     <Dialog open={!!log} onOpenChange={(o) => !o && onClose()}>

@@ -28,7 +28,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       const result = await loginRequest(username.trim(), password);
-      setCsrfToken(result.csrf_token);
+      setCsrfToken(result.csrf_token, result.timezone);
       navigate("/", { replace: true });
     } catch (err) {
       setError(

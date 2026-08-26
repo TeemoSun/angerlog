@@ -13,7 +13,7 @@ async def get_summary(
     start_date: date | None,
     end_date: date | None,
 ) -> dict:
-    return await stats_repository.get_summary(db, user_id, start_date, end_date)
+    return await stats_repository.get_summary(db, user_id, tz, start_date, end_date)
 
 
 async def get_trend(

@@ -1,6 +1,7 @@
 import re
 from functools import lru_cache
 from pathlib import Path
+from zoneinfo import available_timezones
 
 import bcrypt
 from pydantic import field_validator
@@ -28,6 +29,13 @@ class Settings(BaseSettings):
     LOGIN_RATE_LIMIT: str = "5/5minutes"
     CORS_ORIGINS: str = "http://localhost:5173"
     FRONTEND_DIST: str = "/app/frontend/dist"
+
+    @field_validator("USER_TIMEZONE")
+    @classmethod
+    def validate_timezone(cls, v: str) -> str:
+        if v not in available_timezones():
+            raise ValueError(f"USER_TIMEZONE must be a valid IANA timezone, got {v!r}")
+        return v
 
     @field_validator("LOGIN_RATE_LIMIT")
     @classmethod

@@ -62,7 +62,9 @@ async def login(
     _set_access_cookie(response, access_token)
     _set_refresh_cookie(response, refresh_raw)
     csrf_token = security.issue_csrf_token(access_token)
-    return envelope({"csrf_token": csrf_token, "username": user.username})
+    return envelope(
+        {"csrf_token": csrf_token, "username": user.username, "timezone": user.timezone}
+    )
 
 
 @router.post("/refresh")
@@ -81,7 +83,9 @@ async def refresh(request: Request, response: Response, db: AsyncSession = Depen
     access_token = security.create_access_token(user.id)
     _set_access_cookie(response, access_token)
     _set_refresh_cookie(response, new_raw)
-    return envelope({"csrf_token": security.issue_csrf_token(access_token)})
+    return envelope(
+        {"csrf_token": security.issue_csrf_token(access_token), "timezone": user.timezone}
+    )
 
 
 @router.post("/logout")

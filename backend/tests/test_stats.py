@@ -95,6 +95,67 @@ async def test_summary_date_range(client):
     assert data["max_intensity"] == 5
 
 
+async def test_summary_date_range_uses_user_timezone(client):
+    """start_date/end_date 是用户时区（Asia/Shanghai）的墙钟日期边界，DB 存 UTC。"""
+    csrf = await _login(client)
+    await _create_log(
+        client,
+        csrf,
+        "超界前",
+        3,
+        "工作",
+        created_at=datetime(2026, 8, 9, 15, 59, tzinfo=UTC),  # 上海 8-9 23:59，不在当天
+    )
+    await _create_log(
+        client,
+        csrf,
+        "凌晨",
+        5,
+        "工作",
+        created_at=datetime(2026, 8, 9, 16, 30, tzinfo=UTC),  # 上海 8-10 00:30，当天
+    )
+    await _create_log(
+        client,
+        csrf,
+        "深夜",
+        7,
+        "工作",
+        created_at=datetime(2026, 8, 10, 15, 30, tzinfo=UTC),  # 上海 8-10 23:30，当天
+    )
+    await _create_log(
+        client,
+        csrf,
+        "超界",
+        9,
+        "工作",
+        created_at=datetime(2026, 8, 10, 16, 0, tzinfo=UTC),  # 上海 8-11 00:00，不在当天
+    )
+
+    resp = await client.get("/api/v1/stats/summary?start_date=2026-08-10&end_date=2026-08-10")
+    data = resp.json()["data"]
+    assert data["total_count"] == 2
+    assert data["max_intensity"] == 7
+
+
+async def test_trend_date_range_uses_user_timezone(client):
+    """trend 的 start_date/end_date 边界同样按用户时区换算。"""
+    csrf = await _login(client)
+    await _create_log(
+        client,
+        csrf,
+        "t1",
+        4,
+        "工作",
+        created_at=datetime(2026, 8, 9, 18, 30, tzinfo=UTC),  # 上海 8-10 02:30
+    )
+    resp = await client.get(
+        "/api/v1/stats/trend?granularity=day&start_date=2026-08-10&end_date=2026-08-10"
+    )
+    rows = resp.json()["data"]
+    assert len(rows) == 1
+    assert rows[0]["count"] == 1
+
+
 async def test_trend_day(client):
     csrf = await _login(client)
     base = datetime(2026, 8, 15, 10, 0, tzinfo=UTC)

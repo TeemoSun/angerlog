@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { errorMessage } from "@/lib/api";
 import { createLogRequest } from "@/lib/requests";
 import type { Category, LogItem } from "@/lib/types";
-import { intensityColor, intensityLabel } from "@/lib/utils";
+import { appTimezone, intensityColor, intensityLabel, wallParts } from "@/lib/utils";
 
 export const CATEGORIES: Category[] = ["工作", "家庭", "交通", "社交", "其他"];
 
@@ -95,9 +95,10 @@ export function LogFormDialog({
     if (value >= 8) setBreathingOpen(true);
   };
 
-  const dateText = `${createdAt.getFullYear()} 年 ${createdAt.getMonth() + 1} 月 ${createdAt.getDate()} 日`;
-  const timeText = `${String(createdAt.getHours()).padStart(2, "0")}:${String(
-    createdAt.getMinutes(),
+  const createdAtWall = wallParts(createdAt, appTimezone());
+  const dateText = `${createdAtWall.year} 年 ${createdAtWall.month} 月 ${createdAtWall.day} 日`;
+  const timeText = `${String(createdAtWall.hour).padStart(2, "0")}:${String(
+    createdAtWall.minute,
   ).padStart(2, "0")}`;
 
   return (

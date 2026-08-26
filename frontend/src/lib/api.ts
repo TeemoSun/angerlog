@@ -72,12 +72,14 @@ async function performRefresh(): Promise<void> {
     skipAuthRefresh: true,
     headers: { "Content-Type": "application/json" },
   } as CustomRequestConfig);
-  const body = res.data as { data?: { csrf_token?: string } } | undefined;
+  const body = res.data as
+    | { data?: { csrf_token?: string; timezone?: string } }
+    | undefined;
   const token = body?.data?.csrf_token;
   if (!token) {
     throw new Error("refresh response missing csrf_token");
   }
-  useAuthStore.getState().setCsrfToken(token);
+  useAuthStore.getState().setCsrfToken(token, body.data?.timezone);
 }
 
 let restorePromise: Promise<boolean> | null = null;

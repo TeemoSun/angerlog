@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import Integer, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,23 +12,30 @@ def _active(stmt):
     return stmt.where(AngerLog.is_deleted.is_(False))
 
 
-def _date_range_filter(start_date: date | None, end_date: date | None):
+def _date_range_filter(start_date: date | None, end_date: date | None, tz: str):
     filters = []
     if start_date is not None:
-        filters.append(AngerLog.created_at >= datetime.combine(start_date, datetime.min.time()))
+        filters.append(
+            AngerLog.created_at
+            >= datetime.combine(start_date, datetime.min.time(), tzinfo=ZoneInfo(tz))
+        )
     if end_date is not None:
-        filters.append(AngerLog.created_at <= datetime.combine(end_date, datetime.max.time()))
+        filters.append(
+            AngerLog.created_at
+            <= datetime.combine(end_date, datetime.max.time(), tzinfo=ZoneInfo(tz))
+        )
     return filters
 
 
 async def get_summary(
     db: AsyncSession,
     user_id: UUID,
+    tz: str,
     start_date: date | None,
     end_date: date | None,
 ) -> dict:
     filters = [AngerLog.user_id == user_id, AngerLog.is_deleted.is_(False)]
-    filters += _date_range_filter(start_date, end_date)
+    filters += _date_range_filter(start_date, end_date, tz)
 
     count_stmt = select(func.count()).select_from(AngerLog).where(*filters)
     total = (await db.execute(count_stmt)).scalar_one()
@@ -79,7 +87,7 @@ async def get_trend(
     end_date: date | None,
 ) -> list[dict]:
     filters = [AngerLog.user_id == user_id, AngerLog.is_deleted.is_(False)]
-    filters += _date_range_filter(start_date, end_date)
+    filters += _date_range_filter(start_date, end_date, tz)
 
     if granularity == "month":
         period_expr = func.to_char(
@@ -125,7 +133,7 @@ async def get_heatmap(
     end_date: date | None,
 ) -> list[dict]:
     filters = [AngerLog.user_id == user_id, AngerLog.is_deleted.is_(False)]
-    filters += _date_range_filter(start_date, end_date)
+    filters += _date_range_filter(start_date, end_date, tz)
 
     stmt = (
         select(

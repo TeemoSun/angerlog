@@ -3,9 +3,18 @@ import { BrowserRouter, Navigate, Route, Routes, useNavigate } from "react-route
 
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { tryRestoreSession } from "@/lib/api";
+import { setAppTimezone } from "@/lib/utils";
 import { AUTH_EXPIRED_EVENT, useAuthStore } from "@/stores/auth";
 import { HomePage } from "@/pages/HomePage";
 import { LoginPage } from "@/pages/LoginPage";
+
+function TimezoneSync() {
+  const timezone = useAuthStore((s) => s.timezone);
+  useEffect(() => {
+    setAppTimezone(timezone);
+  }, [timezone]);
+  return null;
+}
 
 function SessionExpiredListener() {
   const navigate = useNavigate();
@@ -53,6 +62,7 @@ export function App() {
         <div className="pointer-events-none fixed bottom-0 left-0 z-0 h-40 w-full bg-gradient-to-t from-night-900/80 to-transparent" />
 
         <SessionExpiredListener />
+        <TimezoneSync />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route

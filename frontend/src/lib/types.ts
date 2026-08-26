@@ -55,6 +55,7 @@ export interface HeatmapCell {
 export interface LoginResult {
   csrf_token: string;
   username: string;
+  timezone: string;
 }
 
 export interface Envelope<T> {

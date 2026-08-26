@@ -9,17 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { appTimezone, cn, wallParts, wallTimeToUTC } from "@/lib/utils";
 
 const WEEKDAY_LABELS = ["一", "二", "三", "四", "五", "六", "日"];
 
 function pad(n: number): string {
   return String(n).padStart(2, "0");
-}
-
-/** 带时区的本地时间戳（毫秒），始终视为用户本地时区。 */
-function toLocalMs(d: Date): number {
-  return d.getTime();
 }
 
 export function DateTimePicker({
@@ -35,30 +30,32 @@ export function DateTimePicker({
   onChange: (value: Date) => void;
   title?: string;
 }) {
-  const [viewYear, setViewYear] = useState(value.getFullYear());
-  const [viewMonth, setViewMonth] = useState(value.getMonth());
+  const tz = appTimezone();
+  const wall = wallParts(value, tz);
+  const [viewYear, setViewYear] = useState(wall.year);
+  const [viewMonth, setViewMonth] = useState(wall.month - 1);
 
   useEffect(() => {
     if (open) {
-      setViewYear(value.getFullYear());
-      setViewMonth(value.getMonth());
+      setViewYear(wall.year);
+      setViewMonth(wall.month - 1);
     }
     // 仅在打开时重置，避免外部 value 变化时抖动
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const hour = value.getHours();
-  const minute = value.getMinutes();
+  const hour = wall.hour;
+  const minute = wall.minute;
 
-  const today = new Date();
-  const todayKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
-  const selectedKey = `${value.getFullYear()}-${value.getMonth()}-${value.getDate()}`;
+  const todayWall = wallParts(new Date(), tz);
+  const todayKey = `${todayWall.year}-${todayWall.month - 1}-${todayWall.day}`;
+  const selectedKey = `${wall.year}-${wall.month - 1}-${wall.day}`;
 
   const days = useMemo(() => {
-    const first = new Date(viewYear, viewMonth, 1);
-    let startWeekday = first.getDay() - 1; // 周一=0
+    const first = new Date(Date.UTC(viewYear, viewMonth, 1));
+    let startWeekday = first.getUTCDay() - 1; // 周一=0
     if (startWeekday < 0) startWeekday = 6;
-    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const daysInMonth = new Date(Date.UTC(viewYear, viewMonth + 1, 0)).getUTCDate();
     const cells: (number | null)[] = [];
     for (let i = 0; i < startWeekday; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
@@ -85,8 +82,8 @@ export function DateTimePicker({
   };
 
   const pickDay = (day: number) => {
-    const picked = new Date(viewYear, viewMonth, day, hour, minute, 0, 0);
-    if (toLocalMs(picked) > Date.now()) {
+    const picked = new Date(wallTimeToUTC({ ...wall, day }, tz));
+    if (picked.getTime() > Date.now()) {
       // 所选时刻尚未到来，钳制为当前时间
       onChange(new Date());
     } else {
@@ -96,14 +93,10 @@ export function DateTimePicker({
 
   // 改时分时组合新时间并同步到外部 value
   const setHour = (h: number) => {
-    const picked = new Date(value);
-    picked.setHours(h, minute, 0, 0);
-    onChange(picked);
+    onChange(new Date(wallTimeToUTC({ ...wall, hour: h }, tz)));
   };
   const setMinute = (m: number) => {
-    const picked = new Date(value);
-    picked.setHours(hour, m, 0, 0);
-    onChange(picked);
+    onChange(new Date(wallTimeToUTC({ ...wall, minute: m }, tz)));
   };
 
   const setNow = () => {
@@ -113,7 +106,7 @@ export function DateTimePicker({
 
   const confirm = () => {
     // 最终值若超过当前时间，钳制为现在，避免后端拒绝未来时间
-    if (toLocalMs(value) > Date.now()) {
+    if (value.getTime() > Date.now()) {
       onChange(new Date());
     }
     onOpenChange(false);
@@ -163,8 +156,8 @@ export function DateTimePicker({
             const key = `${viewYear}-${viewMonth}-${day}`;
             const isToday = key === todayKey;
             const isSelected = key === selectedKey;
-            const cellDate = new Date(viewYear, viewMonth, day, 0, 0, 0);
-            const isFuture = toLocalMs(cellDate) > Date.now();
+            const cellDate = wallTimeToUTC({ ...wall, day }, tz);
+            const isFuture = cellDate > Date.now();
             return (
               <button
                 key={key}
@@ -202,7 +195,7 @@ export function DateTimePicker({
             onChange={setMinute}
             ariaLabel="分"
           />
-          <span className="ml-1 text-xs text-ink-light">{value.getHours() >= 12 ? "下午" : "上午"}</span>
+          <span className="ml-1 text-xs text-ink-light">{hour >= 12 ? "下午" : "上午"}</span>
         </div>
 
         <DialogFooter className="flex-row justify-center gap-2 sm:justify-center">
