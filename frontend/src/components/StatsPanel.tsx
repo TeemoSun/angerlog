@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -23,28 +23,56 @@ import {
 import { errorMessage } from "@/lib/api";
 import { fetchHeatmap, fetchSummary, fetchTrend } from "@/lib/requests";
 import type { HeatmapCell, Summary, TrendPoint } from "@/lib/types";
-import { startOfThisWeekStr, todayStr, WEEKDAYS_CN } from "@/lib/utils";
+import { daysAgoStr, startOfThisWeekStr, todayStr, WEEKDAYS_CN } from "@/lib/utils";
 
 const CATEGORY_COLORS = ["#f6d365", "#fbbf24", "#fb923c", "#ef4444", "#dc2626"];
+
+type PeriodKey = "week" | "month" | "year" | "custom";
+
+const PERIOD_KEYS: PeriodKey[] = ["week", "month", "year", "custom"];
+const PERIOD_LABELS: Record<PeriodKey, string> = {
+  week: "本周",
+  month: "本月",
+  year: "本年",
+  custom: "自定义",
+};
 
 export function StatsPanel() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [trend, setTrend] = useState<TrendPoint[]>([]);
   const [heatmap, setHeatmap] = useState<HeatmapCell[]>([]);
   const [granularity, setGranularity] = useState<"day" | "week" | "month">("day");
+  const [period, setPeriod] = useState<PeriodKey>("month");
+  const [customStart, setCustomStart] = useState<string>(() => daysAgoStr(6));
+  const [customEnd, setCustomEnd] = useState<string>(() => todayStr());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const range = useMemo(() => {
+    switch (period) {
+      case "week":
+        return { start: startOfThisWeekStr(), end: todayStr() };
+      case "month":
+        return { start: daysAgoStr(29), end: todayStr() };
+      case "year":
+        return { start: daysAgoStr(364), end: todayStr() };
+      case "custom": {
+        let start = customStart || todayStr();
+        let end = customEnd || todayStr();
+        if (start > end) [start, end] = [end, start];
+        return { start, end };
+      }
+    }
+  }, [period, customStart, customEnd]);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const weekStart = startOfThisWeekStr();
-      const today = todayStr();
       const [sum, tr, hm] = await Promise.all([
-        fetchSummary(weekStart, today),
-        fetchTrend(granularity, weekStart, today),
-        fetchHeatmap(weekStart, today),
+        fetchSummary(range.start, range.end),
+        fetchTrend(granularity, range.start, range.end),
+        fetchHeatmap(range.start, range.end),
       ]);
       setSummary(sum);
       setTrend(tr);
@@ -54,7 +82,7 @@ export function StatsPanel() {
     } finally {
       setLoading(false);
     }
-  }, [granularity]);
+  }, [granularity, range]);
 
   useEffect(() => {
     load();
@@ -64,6 +92,54 @@ export function StatsPanel() {
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex justify-center sm:justify-start">
+        <div className="flex gap-1 rounded-full border border-glass-border bg-glass p-1">
+          {PERIOD_KEYS.map((p) => (
+            <Button
+              key={p}
+              size="sm"
+              variant={period === p ? "secondary" : "ghost"}
+              onClick={() => setPeriod(p)}
+              className={
+                "rounded-full text-xs " +
+                (period === p
+                  ? "bg-star-amber/20 text-star-amber ring-1 ring-star-amber/40"
+                  : "text-milk-dim hover:text-milk")
+              }
+            >
+              {PERIOD_LABELS[p]}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {period === "custom" && (
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-star-amber/40 bg-star-amber/10 px-3 py-2.5">
+          <span className="text-xs text-milk-dim">从</span>
+          <input
+            type="date"
+            value={customStart}
+            max={customEnd}
+            onChange={(e) => setCustomStart(e.target.value)}
+            aria-label="自定义开始日期"
+            className="rounded-lg border border-glass-border bg-glass px-2 py-1 text-xs text-milk [color-scheme:dark] focus:outline-none focus:ring-1 focus:ring-star-amber/60"
+          />
+          <span className="text-xs text-milk-dim">至</span>
+          <input
+            type="date"
+            value={customEnd}
+            min={customStart}
+            max={todayStr()}
+            onChange={(e) => setCustomEnd(e.target.value)}
+            aria-label="自定义结束日期"
+            className="rounded-lg border border-glass-border bg-glass px-2 py-1 text-xs text-milk [color-scheme:dark] focus:outline-none focus:ring-1 focus:ring-star-amber/60"
+          />
+          <span className="ml-auto hidden text-[10px] text-milk-dim/70 sm:inline">
+            共 {Math.round((Date.parse(customEnd || todayStr()) - Date.parse(customStart || todayStr())) / 86400000) + 1} 天
+          </span>
+        </div>
+      )}
+
       {error && (
         <Card className="border-star-red/30 bg-star-red/10">
           <CardContent className="py-3 text-sm text-star-red/90">{error}</CardContent>
@@ -72,7 +148,7 @@ export function StatsPanel() {
 
       {summary && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SummaryCard label="本周生气" value={String(summary.total_count)} />
+          <SummaryCard label="生气次数" value={String(summary.total_count)} />
           <SummaryCard
             label="平均强度"
             value={summary.avg_intensity == null ? "—" : summary.avg_intensity.toFixed(1)}
@@ -92,7 +168,7 @@ export function StatsPanel() {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-xl text-paper">趋势</CardTitle>
-            <CardDescription>本周期内记录次数</CardDescription>
+            <CardDescription>所选周期内记录次数</CardDescription>
           </div>
           <div className="flex gap-1 rounded-full border border-glass-border bg-glass p-1">
             {(["day", "week", "month"] as const).map((g) => (

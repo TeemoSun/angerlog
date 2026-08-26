@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  daysAgoStr,
   setAppTimezone,
   startOfThisWeekInTz,
   wallParts,
@@ -39,5 +40,18 @@ describe("timezone utils", () => {
     const monday = startOfThisWeekInTz();
     const wall = wallParts(new Date(monday));
     expect(wall.day).toBe(24); // 2026-08-24 周一
+  });
+
+  it("daysAgoStr 按配置时区的墙钟日期计算", () => {
+    setAppTimezone("Asia/Shanghai");
+    const today = daysAgoStr(0);
+    const yesterday = daysAgoStr(1);
+    const parsedToday = new Date(`${today}T00:00:00`);
+    const parsedYesterday = new Date(`${yesterday}T00:00:00`);
+    expect(parsedToday.getTime() - parsedYesterday.getTime()).toBe(86400000);
+    // 与 wallParts 的墙钟日期一致（当前时刻在上海 00:00-08:00 时，UTC 已是前一天，也不应串日期）
+    const wall = wallParts(new Date());
+    const pad = (n: number) => String(n).padStart(2, "0");
+    expect(today).toBe(`${wall.year}-${pad(wall.month)}-${pad(wall.day)}`);
   });
 });

@@ -101,6 +101,12 @@ export function todayStr(): string {
   return ymdStr(Date.now(), appTimezone());
 }
 
+/** 指定时区下"今天往前 n 天"的墙钟日期字符串（YYYY-MM-DD），n=0 即今天。 */
+export function daysAgoStr(n: number, tz: string = appTimezone()): string {
+  const todayWall = wallParts(new Date(), tz);
+  return ymdStr(wallTimeToUTC({ ...todayWall, day: todayWall.day - n }, tz), tz);
+}
+
 export function startOfThisWeekStr(): string {
   return ymdStr(startOfThisWeekInTz(), appTimezone());
 }

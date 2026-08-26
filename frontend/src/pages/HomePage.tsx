@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { errorMessage } from "@/lib/api";
 import { fetchLogs, fetchSummary } from "@/lib/requests";
 import type { LogItem, PageMeta, Summary } from "@/lib/types";
-import { startOfThisWeekStr, todayStr } from "@/lib/utils";
+import { daysAgoStr, todayStr } from "@/lib/utils";
 import { useLogsStore } from "@/stores/logs";
 
 const PAGE_SIZE = 20;
@@ -51,7 +51,7 @@ export function HomePage() {
 
   const loadSummary = useCallback(async () => {
     try {
-      const s = await fetchSummary(startOfThisWeekStr(), todayStr());
+      const s = await fetchSummary(daysAgoStr(29), todayStr());
       setSummary(s);
     } catch {
       // 首页概览非关键，失败不阻塞
@@ -144,11 +144,11 @@ export function HomePage() {
                 <Bottle logs={logs} onOpenForm={() => setFormOpen(true)} />
                 <div className="grid w-full max-w-2xl grid-cols-3 gap-2 sm:gap-4">
                   <SummaryTile
-                    label="今日已记录"
+                    label="近30天已记录"
                     value={summary?.total_count != null ? String(summary.total_count) : "—"}
                   />
                   <SummaryTile
-                    label="本周平均强度"
+                    label="近30天平均强度"
                     value={summary?.avg_intensity != null ? summary.avg_intensity.toFixed(1) : "—"}
                   />
                   <SummaryTile
