@@ -358,3 +358,13 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* Recharts 焦点线框消除 */
+.recharts-wrapper,
+.recharts-surface,
+.recharts-surface:focus,
+.recharts-wrapper:focus,
+.recharts-sector:focus,
+*:focus-visible.recharts-surface {
+  outline: none !important;
+}

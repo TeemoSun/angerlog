@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -25,7 +25,19 @@ import { fetchHeatmap, fetchSummary, fetchTrend } from "@/lib/requests";
 import type { HeatmapCell, Summary, TrendPoint } from "@/lib/types";
 import { daysAgoStr, startOfThisWeekStr, todayStr, WEEKDAYS_CN } from "@/lib/utils";
 
-const CATEGORY_COLORS = ["#f6d365", "#fbbf24", "#fb923c", "#ef4444", "#dc2626"];
+const CATEGORY_COLOR_MAP: Record<string, string> = {
+  工作: "#f6d365",
+  家庭: "#fbbf24",
+  交通: "#fb923c",
+  社交: "#ef4444",
+  其他: "#94a3b8",
+};
+const FALLBACK_COLORS = ["#f6d365", "#fbbf24", "#fb923c", "#ef4444", "#a78bfa", "#94a3b8"];
+
+function getCategoryColor(name: string, index: number): string {
+  return CATEGORY_COLOR_MAP[name] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+}
+
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 type PeriodKey = "week" | "month" | "year" | "custom";
@@ -98,6 +110,19 @@ export function StatsPanel() {
   }, [heatmap]);
 
   const maxCount = useMemo(() => heatmapMax(heatmap), [heatmap]);
+
+  const categoryEntries = useMemo(() => {
+    if (!summary) return [];
+    return Object.entries(summary.category_counts).map(([name, value], i) => ({
+      name,
+      value,
+      fill: getCategoryColor(name, i),
+    }));
+  }, [summary]);
+
+  const totalCategoryCount = useMemo(() => {
+    return categoryEntries.reduce((acc, cur) => acc + cur.value, 0);
+  }, [categoryEntries]);
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
@@ -198,36 +223,53 @@ export function StatsPanel() {
             ))}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-4 pt-0">
           {loading ? (
-            <div className="flex h-48 items-center justify-center text-sm text-milk-dim">
+            <div className="flex h-44 items-center justify-center text-sm text-milk-dim">
               加载中…
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={trend} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
-                <CartesianGrid stroke="rgba(255,255,255,0.06)" />
-                <XAxis dataKey="period" tick={{ fill: "#c9bfa8", fontSize: 11 }} />
-                <YAxis allowDecimals={false} tick={{ fill: "#c9bfa8", fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={{
-                    background: "rgba(15,23,42,0.95)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: 12,
-                    color: "#e2e8f0",
-                  }}
+            <ResponsiveContainer width="100%" height={180}>
+              <AreaChart data={trend} margin={{ top: 12, right: 8, left: -16, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#fbbf24" stopOpacity={0.28} />
+                    <stop offset="100%" stopColor="#fbbf24" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.05)"
+                  vertical={false}
                 />
-                <Line
+                <XAxis
+                  dataKey="period"
+                  tickLine={false}
+                  axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                  tick={{ fill: "#c9bfa8", fontSize: 10 }}
+                  dy={4}
+                  height={22}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  width={28}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "#c9bfa8", fontSize: 10 }}
+                />
+                <Tooltip content={<ChartTooltip />} />
+                <Area
                   type="monotone"
                   dataKey="count"
                   name="次数"
                   stroke="#fbbf24"
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: "#fbbf24", stroke: "#0b0a1a", strokeWidth: 2 }}
-                  activeDot={{ r: 6, fill: "#f6d365" }}
-                  style={{ filter: "drop-shadow(0 0 6px rgba(251,191,36,0.5))" }}
+                  strokeWidth={2.5}
+                  fill="url(#trendGradient)"
+                  dot={{ r: 3.5, fill: "#fbbf24", stroke: "#0b0a1a", strokeWidth: 2 }}
+                  activeDot={{ r: 5.5, fill: "#f6d365", stroke: "#0b0a1a", strokeWidth: 2 }}
+                  style={{ filter: "drop-shadow(0 0 6px rgba(251,191,36,0.45))" }}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           )}
         </CardContent>
@@ -240,35 +282,64 @@ export function StatsPanel() {
             <CardDescription>各类别的记录次数</CardDescription>
           </CardHeader>
           <CardContent>
-            {summary && Object.keys(summary.category_counts).length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={Object.entries(summary.category_counts).map(([name, value], i) => ({
-                      name,
-                      value,
-                      fill: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
-                    }))}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={45}
-                    outerRadius={80}
-                    paddingAngle={3}
-                  >
-                    {Object.entries(summary.category_counts).map(([name], i) => (
-                      <Cell key={name} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: "rgba(15,23,42,0.95)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: 12,
-                      color: "#e2e8f0",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            {categoryEntries.length > 0 ? (
+              <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
+                {/* 环形图容器与中心统计 */}
+                <div className="relative flex h-44 w-44 shrink-0 items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryEntries}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={50}
+                        outerRadius={72}
+                        paddingAngle={categoryEntries.length > 1 ? 4 : 0}
+                        stroke="none"
+                      >
+                        {categoryEntries.map((entry) => (
+                          <Cell key={entry.name} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<ChartTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <span className="text-[10px] text-milk-dim">总计</span>
+                    <span className="text-xl font-bold text-paper drop-shadow-sm">
+                      {totalCategoryCount}
+                    </span>
+                    <span className="text-[10px] text-milk-dim/70">次记录</span>
+                  </div>
+                </div>
+
+                {/* 分类图例与占比列表 */}
+                <div className="flex w-full flex-1 flex-col justify-center gap-2.5">
+                  {categoryEntries.map((item) => {
+                    const percent =
+                      totalCategoryCount > 0
+                        ? Math.round((item.value / totalCategoryCount) * 100)
+                        : 0;
+                    return (
+                      <div key={item.name} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="h-2.5 w-2.5 shrink-0 rounded-full shadow-[0_0_6px_rgba(255,255,255,0.15)]"
+                            style={{ backgroundColor: item.fill }}
+                          />
+                          <span className="font-medium text-paper">{item.name}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-milk-dim">{item.value} 次</span>
+                          <span className="w-10 text-right font-mono text-[11px] font-semibold text-star-amber">
+                            {percent}%
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             ) : (
               <p className="py-8 text-center text-sm text-milk-dim">暂无分类数据</p>
             )}
@@ -278,7 +349,7 @@ export function StatsPanel() {
         <Card className="min-w-0 border-glass-border bg-glass backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="text-xl text-paper">高频时段</CardTitle>
-            <CardDescription>星期 × 小时 · 按用户时区</CardDescription>
+            <CardDescription>星期 × 小时</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -436,5 +507,47 @@ function HeatmapSquare({
       title={count === 0 ? `${label} · 无记录` : `${label} · ${count} 次记录`}
       data-testid="heatmap-cell"
     />
+  );
+}
+
+interface TooltipPayloadItem {
+  name?: string;
+  value?: number | string;
+  color?: string;
+  payload?: {
+    fill?: string;
+    [key: string]: unknown;
+  };
+}
+
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+}) {
+  if (!active || !payload || !payload.length) return null;
+  return (
+    <div className="rounded-xl border border-glass-border bg-night-900/95 px-3 py-2 text-xs shadow-xl backdrop-blur-md">
+      {label && <div className="mb-1 font-mono text-[11px] text-milk-dim">{label}</div>}
+      <div className="flex flex-col gap-1">
+        {payload.map((item, idx) => {
+          const color = item.payload?.fill || item.color || "#fbbf24";
+          return (
+            <div key={idx} className="flex items-center gap-2">
+              <span
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: color }}
+              />
+              <span className="text-milk-dim">{item.name}:</span>
+              <span className="font-semibold text-paper">{item.value} 次</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
