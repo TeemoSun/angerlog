@@ -201,40 +201,40 @@ export function StatsPanel() {
                 加载中…
               </div>
             ) : (
-              <div className="overflow-x-auto pb-1">
-                <div className="flex min-w-[480px] flex-col gap-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-8 shrink-0" />
-                    {Array.from({ length: 24 }, (_, hour) => (
-                      <div key={hour} className="flex-1 text-center text-[9px] text-milk-dim/70">
-                        {hour % 4 === 0 ? hour : ""}
-                      </div>
-                    ))}
-                  </div>
-                  {WEEKDAYS_CN.map((d, dayIdx) => (
-                    <div key={d} className="flex items-center gap-1.5">
-                      <div className="w-8 shrink-0 text-[10px] text-milk-dim">{d}</div>
-                      {Array.from({ length: 24 }, (_, hour) => {
-                        const cell = heatmapRows[hour].find((c) => c.day_of_week === dayIdx + 1);
-                        const count = cell?.count ?? 0;
-                        return (
-                          <HeatmapSquare
-                            key={hour}
-                            count={count}
-                            max={heatmapMax(heatmap)}
-                            label={`${d} ${String(hour).padStart(2, "0")}时`}
-                          />
-                        );
-                      })}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1">
+                  <div className="w-8 shrink-0" />
+                  {WEEKDAYS_CN.map((d) => (
+                    <div key={d} className="flex-1 text-center text-[10px] text-milk-dim">
+                      {d}
                     </div>
                   ))}
-                  <div className="flex items-center justify-end gap-1.5 pt-1">
-                    <span className="text-[10px] text-milk-dim/70">少</span>
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <div key={i} className="h-2.5 w-2.5 rounded-[3px]" style={{ backgroundColor: heatColor(i, 4) }} />
-                    ))}
-                    <span className="text-[10px] text-milk-dim/70">多</span>
+                </div>
+                {Array.from({ length: 24 }, (_, hour) => (
+                  <div key={hour} className="flex items-center gap-1">
+                    <div className="w-8 shrink-0 text-right text-[10px] leading-none text-milk-dim/70">
+                      {hour % 4 === 0 ? String(hour).padStart(2, "0") : ""}
+                    </div>
+                    {WEEKDAYS_CN.map((d, dayIdx) => {
+                      const cell = heatmapRows[hour].find((c) => c.day_of_week === dayIdx + 1);
+                      const count = cell?.count ?? 0;
+                      return (
+                        <HeatmapSquare
+                          key={d}
+                          count={count}
+                          max={heatmapMax(heatmap)}
+                          label={`${d} ${String(hour).padStart(2, "0")}时`}
+                        />
+                      );
+                    })}
                   </div>
+                ))}
+                <div className="flex items-center justify-end gap-1 pt-1">
+                  <span className="text-[10px] text-milk-dim/70">少</span>
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-2.5 w-2.5 rounded-[3px]" style={{ backgroundColor: heatColor(i, 4) }} />
+                  ))}
+                  <span className="text-[10px] text-milk-dim/70">多</span>
                 </div>
               </div>
             )}
