@@ -111,6 +111,16 @@ export function startOfThisWeekStr(): string {
   return ymdStr(startOfThisWeekInTz(), appTimezone());
 }
 
+export function startOfThisMonthStr(tz: string = appTimezone()): string {
+  const now = wallParts(new Date(), tz);
+  return ymdStr(wallTimeToUTC({ ...now, day: 1, hour: 0, minute: 0, second: 0 }, tz), tz);
+}
+
+export function startOfThisYearStr(tz: string = appTimezone()): string {
+  const now = wallParts(new Date(), tz);
+  return ymdStr(wallTimeToUTC({ ...now, month: 1, day: 1, hour: 0, minute: 0, second: 0 }, tz), tz);
+}
+
 export function formatDateTime(iso: string): string {
   const p = wallParts(new Date(iso), appTimezone());
   const pad = (n: number) => String(n).padStart(2, "0");

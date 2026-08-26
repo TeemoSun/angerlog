@@ -23,7 +23,14 @@ import {
 import { errorMessage } from "@/lib/api";
 import { fetchHeatmap, fetchSummary, fetchTrend } from "@/lib/requests";
 import type { HeatmapCell, Summary, TrendPoint } from "@/lib/types";
-import { daysAgoStr, startOfThisWeekStr, todayStr, WEEKDAYS_CN } from "@/lib/utils";
+import {
+  daysAgoStr,
+  startOfThisMonthStr,
+  startOfThisWeekStr,
+  startOfThisYearStr,
+  todayStr,
+  WEEKDAYS_CN,
+} from "@/lib/utils";
 
 const CATEGORY_COLOR_MAP: Record<string, string> = {
   工作: "#f6d365",
@@ -50,11 +57,88 @@ const PERIOD_LABELS: Record<PeriodKey, string> = {
   custom: "自定义",
 };
 
+function fillTrendSeries(
+  raw: TrendPoint[],
+  granularity: "day" | "week" | "month",
+  startDate: string,
+  endDate: string
+): TrendPoint[] {
+  if (!startDate || !endDate) return raw;
+  const map = new Map<string, TrendPoint>();
+  for (const item of raw) {
+    map.set(item.period, item);
+  }
+
+  const result: TrendPoint[] = [];
+
+  if (granularity === "day") {
+    const [sy, sm, sd] = startDate.split("-").map(Number);
+    const [ey, em, ed] = endDate.split("-").map(Number);
+    const cur = new Date(sy, sm - 1, sd);
+    const end = new Date(ey, em - 1, ed);
+    while (cur <= end) {
+      const y = cur.getFullYear();
+      const m = String(cur.getMonth() + 1).padStart(2, "0");
+      const d = String(cur.getDate()).padStart(2, "0");
+      const key = `${y}-${m}-${d}`;
+      result.push(map.get(key) ?? { period: key, count: 0, avg_intensity: null });
+      cur.setDate(cur.getDate() + 1);
+    }
+  } else if (granularity === "month") {
+    const [sy, sm] = startDate.split("-").map(Number);
+    const [ey, em] = endDate.split("-").map(Number);
+    let y = sy;
+    let m = sm;
+    while (y < ey || (y === ey && m <= em)) {
+      const key = `${y}-${String(m).padStart(2, "0")}`;
+      result.push(map.get(key) ?? { period: key, count: 0, avg_intensity: null });
+      m++;
+      if (m > 12) {
+        m = 1;
+        y++;
+      }
+    }
+  } else if (granularity === "week") {
+    const [sy, sm, sd] = startDate.split("-").map(Number);
+    const [ey, em, ed] = endDate.split("-").map(Number);
+    const cur = new Date(sy, sm - 1, sd);
+    const end = new Date(ey, em - 1, ed);
+    const day = cur.getDay();
+    const isoDay = day === 0 ? 7 : day;
+    cur.setDate(cur.getDate() - (isoDay - 1));
+    while (cur <= end) {
+      const y = cur.getFullYear();
+      const m = String(cur.getMonth() + 1).padStart(2, "0");
+      const d = String(cur.getDate()).padStart(2, "0");
+      const key = `${y}-${m}-${d}`;
+      result.push(map.get(key) ?? { period: key, count: 0, avg_intensity: null });
+      cur.setDate(cur.getDate() + 7);
+    }
+  }
+
+  return result.length > 0 ? result : raw;
+}
+
+function formatXAxisTick(value: string, granularity: "day" | "week" | "month"): string {
+  if (!value) return "";
+  if (granularity === "month") {
+    const parts = value.split("-");
+    if (parts.length >= 2) {
+      return `${parseInt(parts[1], 10)}月`;
+    }
+    return value;
+  }
+  const parts = value.split("-");
+  if (parts.length === 3) {
+    return `${parts[1]}-${parts[2]}`;
+  }
+  return value;
+}
+
 export function StatsPanel() {
   const [summary, setSummary] = useState<Summary | null>(null);
-  const [trend, setTrend] = useState<TrendPoint[]>([]);
+  const [rawTrend, setRawTrend] = useState<TrendPoint[]>([]);
   const [heatmap, setHeatmap] = useState<HeatmapCell[]>([]);
-  const [granularity, setGranularity] = useState<"day" | "week" | "month">("day");
   const [period, setPeriod] = useState<PeriodKey>("month");
   const [customStart, setCustomStart] = useState<string>(() => daysAgoStr(6));
   const [customEnd, setCustomEnd] = useState<string>(() => todayStr());
@@ -66,9 +150,9 @@ export function StatsPanel() {
       case "week":
         return { start: startOfThisWeekStr(), end: todayStr() };
       case "month":
-        return { start: daysAgoStr(29), end: todayStr() };
+        return { start: startOfThisMonthStr(), end: todayStr() };
       case "year":
-        return { start: daysAgoStr(364), end: todayStr() };
+        return { start: startOfThisYearStr(), end: todayStr() };
       case "custom": {
         let start = customStart || todayStr();
         let end = customEnd || todayStr();
@@ -77,6 +161,18 @@ export function StatsPanel() {
       }
     }
   }, [period, customStart, customEnd]);
+
+  // 根据选中的统计周期自动计算趋势图粒度
+  const granularity: "day" | "week" | "month" = useMemo(() => {
+    if (period === "week" || period === "month") return "day";
+    if (period === "year") return "month";
+    const s = Date.parse(range.start);
+    const e = Date.parse(range.end);
+    const diffDays = Math.max(1, Math.round((e - s) / 86400000) + 1);
+    if (diffDays <= 31) return "day";
+    if (diffDays <= 90) return "week";
+    return "month";
+  }, [period, range]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -88,7 +184,7 @@ export function StatsPanel() {
         fetchHeatmap(range.start, range.end),
       ]);
       setSummary(sum);
-      setTrend(tr);
+      setRawTrend(tr);
       setHeatmap(hm);
     } catch (err) {
       setError(errorMessage(err));
@@ -100,6 +196,11 @@ export function StatsPanel() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // 补齐时间序列，使坐标轴完整、自适应显示
+  const filledTrend = useMemo(() => {
+    return fillTrendSeries(rawTrend, granularity, range.start, range.end);
+  }, [rawTrend, granularity, range.start, range.end]);
 
   const cellMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -199,29 +300,14 @@ export function StatsPanel() {
       )}
 
       <Card className="min-w-0 border-glass-border bg-glass backdrop-blur-xl">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
           <div>
             <CardTitle className="text-xl text-paper">趋势</CardTitle>
             <CardDescription>所选周期内记录次数</CardDescription>
           </div>
-          <div className="flex gap-1 rounded-full border border-glass-border bg-glass p-1">
-            {(["day", "week", "month"] as const).map((g) => (
-              <Button
-                key={g}
-                size="sm"
-                variant={granularity === g ? "secondary" : "ghost"}
-                onClick={() => setGranularity(g)}
-                className={
-                  "rounded-full text-xs " +
-                  (granularity === g
-                    ? "bg-star-amber/20 text-star-amber ring-1 ring-star-amber/40"
-                    : "text-milk-dim hover:text-milk")
-                }
-              >
-                {g === "day" ? "日" : g === "week" ? "周" : "月"}
-              </Button>
-            ))}
-          </div>
+          <span className="rounded-full border border-glass-border bg-glass px-2.5 py-0.5 text-xs text-milk-dim">
+            按{granularity === "day" ? "日" : granularity === "week" ? "周" : "月"}
+          </span>
         </CardHeader>
         <CardContent className="pb-4 pt-0">
           {loading ? (
@@ -230,7 +316,7 @@ export function StatsPanel() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
-              <AreaChart data={trend} margin={{ top: 12, right: 12, left: 4, bottom: 0 }}>
+              <AreaChart data={filledTrend} margin={{ top: 12, right: 12, left: 4, bottom: 0 }}>
                 <defs>
                   <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#fbbf24" stopOpacity={0.28} />
@@ -247,6 +333,9 @@ export function StatsPanel() {
                   tickLine={false}
                   axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
                   tick={{ fill: "#c9bfa8", fontSize: 10 }}
+                  tickFormatter={(val) => formatXAxisTick(val, granularity)}
+                  interval={filledTrend.length <= 8 ? 0 : "preserveStartEnd"}
+                  minTickGap={16}
                   dy={4}
                   height={22}
                 />
@@ -256,8 +345,9 @@ export function StatsPanel() {
                   tickLine={false}
                   axisLine={false}
                   tick={{ fill: "#c9bfa8", fontSize: 11 }}
+                  domain={[0, (dataMax: number) => Math.max(dataMax > 0 ? Math.ceil(dataMax * 1.25) : 3, 3)]}
                 />
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip content={<ChartTooltip granularity={granularity} />} />
                 <Area
                   type="monotone"
                   dataKey="count"
@@ -516,6 +606,7 @@ interface TooltipPayloadItem {
   color?: string;
   payload?: {
     fill?: string;
+    avg_intensity?: number | null;
     [key: string]: unknown;
   };
 }
@@ -524,15 +615,19 @@ function ChartTooltip({
   active,
   payload,
   label,
+  granularity,
 }: {
   active?: boolean;
   payload?: TooltipPayloadItem[];
   label?: string;
+  granularity?: "day" | "week" | "month";
 }) {
   if (!active || !payload || !payload.length) return null;
+  const formattedLabel = label ? formatTooltipLabel(label, granularity) : "";
+
   return (
     <div className="rounded-xl border border-glass-border bg-night-900/95 px-3 py-2 text-xs shadow-xl backdrop-blur-md">
-      {label && <div className="mb-1 font-mono text-[11px] text-milk-dim">{label}</div>}
+      {formattedLabel && <div className="mb-1 font-mono text-[11px] text-milk-dim">{formattedLabel}</div>}
       <div className="flex flex-col gap-1">
         {payload.map((item, idx) => {
           const color = item.payload?.fill || item.color || "#fbbf24";
@@ -550,4 +645,24 @@ function ChartTooltip({
       </div>
     </div>
   );
+}
+
+function formatTooltipLabel(label: string, granularity?: "day" | "week" | "month"): string {
+  if (granularity === "month") {
+    const parts = label.split("-");
+    if (parts.length >= 2) {
+      return `${parts[0]}年${parseInt(parts[1], 10)}月`;
+    }
+  } else if (granularity === "week") {
+    const parts = label.split("-");
+    if (parts.length === 3) {
+      return `${parts[0]}年${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日 当周`;
+    }
+  } else {
+    const parts = label.split("-");
+    if (parts.length === 3) {
+      return `${parts[0]}年${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日`;
+    }
+  }
+  return label;
 }
