@@ -71,10 +71,13 @@ function LogCard({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3 pl-5 pr-5 pb-5">
-        <p className="font-input text-sm leading-relaxed text-ink">{log.trigger_reason}</p>
+        <div>
+          <p className="mb-1 text-xs font-medium text-ink-light">发生了什么</p>
+          <p className="font-input text-sm leading-relaxed text-ink">{log.trigger_reason}</p>
+        </div>
 
         {log.is_resolved && log.resolution_method && (
-          <div className="rounded-xl border border-star-amber/20 bg-star-gold/10 px-3 py-2.5">
+          <div>
             <p className="mb-1 text-xs font-medium text-amber-700">情绪是怎么消解的</p>
             <p className="font-input text-sm text-amber-800/90">{log.resolution_method}</p>
           </div>
