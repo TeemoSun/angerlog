@@ -201,22 +201,40 @@ export function StatsPanel() {
                 加载中…
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <div className="grid min-w-[480px] grid-cols-[2rem_repeat(7,1fr)] gap-1 text-center">
-                  <div />
-                  {WEEKDAYS_CN.map((d) => (
-                    <div key={d} className="text-[10px] text-milk-dim">
-                      {d}
+              <div className="overflow-x-auto pb-1">
+                <div className="flex min-w-[480px] flex-col gap-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-8 shrink-0" />
+                    {Array.from({ length: 24 }, (_, hour) => (
+                      <div key={hour} className="flex-1 text-center text-[9px] text-milk-dim/70">
+                        {hour % 4 === 0 ? hour : ""}
+                      </div>
+                    ))}
+                  </div>
+                  {WEEKDAYS_CN.map((d, dayIdx) => (
+                    <div key={d} className="flex items-center gap-1.5">
+                      <div className="w-8 shrink-0 text-[10px] text-milk-dim">{d}</div>
+                      {Array.from({ length: 24 }, (_, hour) => {
+                        const cell = heatmapRows[hour].find((c) => c.day_of_week === dayIdx + 1);
+                        const count = cell?.count ?? 0;
+                        return (
+                          <HeatmapSquare
+                            key={hour}
+                            count={count}
+                            max={heatmapMax(heatmap)}
+                            label={`${d} ${String(hour).padStart(2, "0")}时`}
+                          />
+                        );
+                      })}
                     </div>
                   ))}
-                  {Array.from({ length: 24 }, (_, hour) => (
-                    <HeatCellRow
-                      key={hour}
-                      hour={hour}
-                      cells={heatmapRows[hour]}
-                      max={heatmapMax(heatmap)}
-                    />
-                  ))}
+                  <div className="flex items-center justify-end gap-1.5 pt-1">
+                    <span className="text-[10px] text-milk-dim/70">少</span>
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <div key={i} className="h-2.5 w-2.5 rounded-[3px]" style={{ backgroundColor: heatColor(i, 4) }} />
+                    ))}
+                    <span className="text-[10px] text-milk-dim/70">多</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -251,35 +269,27 @@ function heatmapMax(cells: HeatmapCell[]): number {
   return cells.reduce((m, c) => Math.max(m, c.count), 1);
 }
 
-function HeatCellRow({
-  hour,
-  cells,
+function heatColor(level: number, max: number): string {
+  if (level <= 0) return "rgba(148,163,184,0.15)";
+  const t = Math.max(0, Math.min(1, level / max));
+  return `rgba(239,68,68,${0.25 + 0.75 * t})`;
+}
+
+function HeatmapSquare({
+  count,
   max,
+  label,
 }: {
-  hour: number;
-  cells: HeatmapCell[];
+  count: number;
   max: number;
+  label: string;
 }) {
   return (
-    <>
-      <div className="flex items-center justify-end text-[10px] text-milk-dim/80">
-        {String(hour).padStart(2, "0")}时
-      </div>
-      {WEEKDAYS_CN.map((_, dayIdx) => {
-        const day = dayIdx + 1;
-        const cell = cells.find((c) => c.day_of_week === day);
-        const count = cell?.count ?? 0;
-        const alpha = count === 0 ? 0.08 : 0.2 + 0.8 * (count / max);
-        return (
-          <div
-            key={day}
-            className="h-5 rounded"
-            style={{ backgroundColor: count === 0 ? "rgba(148,163,184,0.08)" : `rgba(251,146,60,${alpha})` }}
-            title={count === 0 ? `${WEEKDAYS_CN[dayIdx]} ${hour}时 无记录` : `${WEEKDAYS_CN[dayIdx]} ${hour}时 ${count}次`}
-            data-testid="heatmap-cell"
-          />
-        );
-      })}
-    </>
+    <div
+      className="aspect-square w-full min-w-2.5 max-w-3.5 flex-1 rounded-[3px]"
+      style={{ backgroundColor: heatColor(count, max) }}
+      title={count === 0 ? `${label} 无记录` : `${label} ${count}次`}
+      data-testid="heatmap-cell"
+    />
   );
 }
