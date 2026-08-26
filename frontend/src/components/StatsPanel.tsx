@@ -286,9 +286,9 @@ export function StatsPanel() {
                 加载中…
               </div>
             ) : (
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1">
                 {/* 顶部小时刻度 */}
-                <div className="mb-0.5 flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 pb-0.5">
                   <div className="w-7 shrink-0 sm:w-8" />
                   <div
                     className="grid flex-1 gap-1"
@@ -310,7 +310,7 @@ export function StatsPanel() {
                   const dayOfWeek = dayIdx + 1;
                   return (
                     <div key={d} className="flex items-center gap-1.5">
-                      <div className="w-7 shrink-0 select-none text-left text-[11px] font-medium text-milk-dim sm:w-8">
+                      <div className="w-7 shrink-0 select-none text-left text-[10px] font-medium leading-none text-milk-dim sm:w-8 sm:text-[11px]">
                         {d}
                       </div>
                       <div
@@ -334,7 +334,7 @@ export function StatsPanel() {
                 })}
 
                 {/* 底部图例 */}
-                <div className="flex select-none items-center justify-end gap-1.5 pt-2 text-[10px] text-milk-dim/70">
+                <div className="flex select-none items-center justify-end gap-1.5 pt-3 text-[10px] text-milk-dim/70">
                   <span>少</span>
                   <div className="flex items-center gap-1">
                     <div
@@ -431,7 +431,7 @@ function HeatmapSquare({
 }) {
   return (
     <div
-      className="aspect-square w-full cursor-pointer rounded-[2.5px] border transition-all duration-150 hover:z-10 hover:scale-125 sm:rounded-[3px]"
+      className="aspect-square w-full cursor-pointer rounded-[2px] border transition-all duration-150 hover:z-10 hover:scale-125"
       style={getHeatmapStyle(count, max)}
       title={count === 0 ? `${label} · 无记录` : `${label} · ${count} 次记录`}
       data-testid="heatmap-cell"
