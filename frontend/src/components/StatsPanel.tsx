@@ -26,6 +26,7 @@ import type { HeatmapCell, Summary, TrendPoint } from "@/lib/types";
 import { daysAgoStr, startOfThisWeekStr, todayStr, WEEKDAYS_CN } from "@/lib/utils";
 
 const CATEGORY_COLORS = ["#f6d365", "#fbbf24", "#fb923c", "#ef4444", "#dc2626"];
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 type PeriodKey = "week" | "month" | "year" | "custom";
 
@@ -88,7 +89,15 @@ export function StatsPanel() {
     load();
   }, [load]);
 
-  const heatmapRows = useHeatmapRows(heatmap);
+  const cellMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const cell of heatmap) {
+      map.set(`${cell.day_of_week}_${cell.hour_of_day}`, cell.count);
+    }
+    return map;
+  }, [heatmap]);
+
+  const maxCount = useMemo(() => heatmapMax(heatmap), [heatmap]);
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
@@ -277,40 +286,79 @@ export function StatsPanel() {
                 加载中…
               </div>
             ) : (
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-1">
-                  <div className="w-8 shrink-0" />
-                  {WEEKDAYS_CN.map((d) => (
-                    <div key={d} className="flex-1 text-center text-[10px] text-milk-dim">
-                      {d}
-                    </div>
-                  ))}
-                </div>
-                {Array.from({ length: 24 }, (_, hour) => (
-                  <div key={hour} className="flex items-center gap-1">
-                    <div className="w-8 shrink-0 text-right text-[10px] leading-none text-milk-dim/70">
-                      {hour % 4 === 0 ? String(hour).padStart(2, "0") : ""}
-                    </div>
-                    {WEEKDAYS_CN.map((d, dayIdx) => {
-                      const cell = heatmapRows[hour].find((c) => c.day_of_week === dayIdx + 1);
-                      const count = cell?.count ?? 0;
-                      return (
-                        <HeatmapSquare
-                          key={d}
-                          count={count}
-                          max={heatmapMax(heatmap)}
-                          label={`${d} ${String(hour).padStart(2, "0")}时`}
-                        />
-                      );
-                    })}
+              <div className="flex flex-col gap-1.5">
+                {/* 顶部小时刻度 */}
+                <div className="mb-0.5 flex items-center gap-1.5">
+                  <div className="w-7 shrink-0 sm:w-8" />
+                  <div
+                    className="grid flex-1 gap-1"
+                    style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}
+                  >
+                    {HOURS.map((h) => (
+                      <div
+                        key={h}
+                        className="select-none text-center font-mono text-[9px] leading-none text-milk-dim/70"
+                      >
+                        {h % 4 === 0 ? String(h).padStart(2, "0") : ""}
+                      </div>
+                    ))}
                   </div>
-                ))}
-                <div className="flex items-center justify-end gap-1 pt-1">
-                  <span className="text-[10px] text-milk-dim/70">少</span>
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-2.5 w-2.5 rounded-[3px]" style={{ backgroundColor: heatColor(i, 4) }} />
-                  ))}
-                  <span className="text-[10px] text-milk-dim/70">多</span>
+                </div>
+
+                {/* 星期行（周一 ~ 周日，每行 24 个小时） */}
+                {WEEKDAYS_CN.map((d, dayIdx) => {
+                  const dayOfWeek = dayIdx + 1;
+                  return (
+                    <div key={d} className="flex items-center gap-1.5">
+                      <div className="w-7 shrink-0 select-none text-left text-[11px] font-medium text-milk-dim sm:w-8">
+                        {d}
+                      </div>
+                      <div
+                        className="grid flex-1 gap-1"
+                        style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}
+                      >
+                        {HOURS.map((hour) => {
+                          const count = cellMap.get(`${dayOfWeek}_${hour}`) ?? 0;
+                          return (
+                            <HeatmapSquare
+                              key={hour}
+                              count={count}
+                              max={maxCount}
+                              label={`${d} ${String(hour).padStart(2, "0")}:00`}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* 底部图例 */}
+                <div className="flex select-none items-center justify-end gap-1.5 pt-2 text-[10px] text-milk-dim/70">
+                  <span>少</span>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-2.5 w-2.5 rounded-[2px] border border-white/[0.06] bg-white/[0.04]"
+                      title="无记录"
+                    />
+                    <div
+                      className="h-2.5 w-2.5 rounded-[2px] border border-star-gold/50 bg-star-gold/35 shadow-[0_0_4px_rgba(246,211,101,0.2)]"
+                      title="较少"
+                    />
+                    <div
+                      className="h-2.5 w-2.5 rounded-[2px] border border-star-amber/70 bg-star-amber/60 shadow-[0_0_6px_rgba(251,191,36,0.35)]"
+                      title="中等"
+                    />
+                    <div
+                      className="h-2.5 w-2.5 rounded-[2px] border border-star-orange/85 bg-star-orange/80 shadow-[0_0_8px_rgba(251,146,60,0.45)]"
+                      title="较多"
+                    />
+                    <div
+                      className="h-2.5 w-2.5 rounded-[2px] border border-star-red bg-star-red/95 shadow-[0_0_10px_rgba(239,68,68,0.6)]"
+                      title="频繁"
+                    />
+                  </div>
+                  <span>多</span>
                 </div>
               </div>
             )}
@@ -332,23 +380,44 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function useHeatmapRows(cells: HeatmapCell[]): Record<number, HeatmapCell[]> {
-  const rows: Record<number, HeatmapCell[]> = {};
-  for (let h = 0; h < 24; h++) rows[h] = [];
-  for (const cell of cells) {
-    rows[cell.hour_of_day]?.push(cell);
-  }
-  return rows;
-}
-
 function heatmapMax(cells: HeatmapCell[]): number {
   return cells.reduce((m, c) => Math.max(m, c.count), 1);
 }
 
-function heatColor(level: number, max: number): string {
-  if (level <= 0) return "rgba(148,163,184,0.15)";
-  const t = Math.max(0, Math.min(1, level / max));
-  return `rgba(239,68,68,${0.25 + 0.75 * t})`;
+function getHeatmapStyle(count: number, max: number): React.CSSProperties {
+  if (count <= 0) {
+    return {
+      backgroundColor: "rgba(255, 255, 255, 0.04)",
+      borderColor: "rgba(255, 255, 255, 0.06)",
+    };
+  }
+  const ratio = Math.max(0, Math.min(1, count / max));
+  if (ratio <= 0.25) {
+    return {
+      backgroundColor: "rgba(246, 211, 101, 0.35)",
+      borderColor: "rgba(246, 211, 101, 0.55)",
+      boxShadow: "0 0 5px rgba(246, 211, 101, 0.25)",
+    };
+  }
+  if (ratio <= 0.5) {
+    return {
+      backgroundColor: "rgba(251, 191, 36, 0.6)",
+      borderColor: "rgba(251, 191, 36, 0.8)",
+      boxShadow: "0 0 7px rgba(251, 191, 36, 0.4)",
+    };
+  }
+  if (ratio <= 0.75) {
+    return {
+      backgroundColor: "rgba(251, 146, 60, 0.8)",
+      borderColor: "rgba(251, 146, 60, 0.95)",
+      boxShadow: "0 0 9px rgba(251, 146, 60, 0.5)",
+    };
+  }
+  return {
+    backgroundColor: "rgba(239, 68, 68, 0.95)",
+    borderColor: "rgba(248, 113, 113, 1)",
+    boxShadow: "0 0 12px rgba(239, 68, 68, 0.65)",
+  };
 }
 
 function HeatmapSquare({
@@ -362,9 +431,9 @@ function HeatmapSquare({
 }) {
   return (
     <div
-      className="aspect-square w-full min-w-2.5 max-w-3.5 flex-1 rounded-[3px]"
-      style={{ backgroundColor: heatColor(count, max) }}
-      title={count === 0 ? `${label} 无记录` : `${label} ${count}次`}
+      className="aspect-square w-full cursor-pointer rounded-[2.5px] border transition-all duration-150 hover:z-10 hover:scale-125 sm:rounded-[3px]"
+      style={getHeatmapStyle(count, max)}
+      title={count === 0 ? `${label} · 无记录` : `${label} · ${count} 次记录`}
       data-testid="heatmap-cell"
     />
   );
