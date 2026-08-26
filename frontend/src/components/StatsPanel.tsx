@@ -63,7 +63,7 @@ export function StatsPanel() {
   const heatmapRows = useHeatmapRows(heatmap);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       {error && (
         <Card className="border-star-red/30 bg-star-red/10">
           <CardContent className="py-3 text-sm text-star-red/90">{error}</CardContent>
@@ -88,7 +88,7 @@ export function StatsPanel() {
         </div>
       )}
 
-      <Card className="border-glass-border bg-glass backdrop-blur-xl">
+      <Card className="min-w-0 border-glass-border bg-glass backdrop-blur-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-xl text-paper">趋势</CardTitle>
@@ -149,7 +149,7 @@ export function StatsPanel() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="border-glass-border bg-glass backdrop-blur-xl">
+        <Card className="min-w-0 border-glass-border bg-glass backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="text-xl text-paper">分类分布</CardTitle>
             <CardDescription>各类别的记录次数</CardDescription>
@@ -190,7 +190,7 @@ export function StatsPanel() {
           </CardContent>
         </Card>
 
-        <Card className="border-glass-border bg-glass backdrop-blur-xl">
+        <Card className="min-w-0 border-glass-border bg-glass backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="text-xl text-paper">高频时段</CardTitle>
             <CardDescription>星期 × 小时 · 按用户时区</CardDescription>
