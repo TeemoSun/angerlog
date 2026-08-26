@@ -5,9 +5,9 @@ import { intensityColor } from "@/lib/utils";
 
 export const WATER_MAX_COUNT = 30;
 
-// 敦实可爱造型：大圆角矩形瓶身（x30-170, y~96-280）+ 短圆颈（y62-78）+ 顶部圆形木塞
+// 软萌陪伴布丁瓶造型：矮胖圆鼓瓶身（x28-172, y~82-276）+ 翻卷圆口（y82）+ 大蘑菇软木塞 + 手写便签吊牌
 export const BOTTLE_SHAPE_PATH =
-  "M80 62 h40 v16 c0 12 14 14 24 18 c16 8 26 16 26 34 v110 c0 24 -20 40 -45 40 h-50 c-25 0 -45 -16 -45 -40 v-110 c0 -18 10 -26 26 -34 c10 -4 24 -6 24 -18 v-16 z";
+  "M72 82 H128 V98 C145 106 172 135 172 205 C172 258 145 276 100 276 C55 276 28 258 28 205 C28 135 55 106 72 98 Z";
 
 export function waterLevelPercent(count: number): number {
   const capped = Math.min(count, WATER_MAX_COUNT);
@@ -15,14 +15,14 @@ export function waterLevelPercent(count: number): number {
 }
 
 const MAX_BALLS = 40;
-const COLS = 4;
+const COLS = 5;
 
 function ballPosition(index: number): { x: number; y: number; r: number } {
   const row = Math.floor(index / COLS);
   const col = index % COLS;
-  const x = 58 + col * 27 + (row % 2) * 13;
-  const y = 262 - row * 26;
-  return { x, y, r: 9 };
+  const x = 52 + col * 24 + (row % 2) * 12;
+  const y = 258 - row * 22;
+  return { x, y, r: 8.5 };
 }
 
 export function Bottle({
@@ -34,7 +34,7 @@ export function Bottle({
 }) {
   const count = logs.length;
   const percent = waterLevelPercent(count);
-  const waterBottom = 279;
+  const waterBottom = 276;
   const waterTop = waterBottom - (percent / 100) * 175;
   const shown = logs.slice(-MAX_BALLS);
 
@@ -54,20 +54,24 @@ export function Bottle({
         >
           <defs>
             <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f6d365" stopOpacity="0.45" />
-              <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#fb923c" stopOpacity="0.75" />
+              <stop offset="0%" stopColor="#fde68a" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0.85" />
             </linearGradient>
             <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
-              <stop offset="35%" stopColor="#ffffff" stopOpacity="0.04" />
-              <stop offset="65%" stopColor="#ffffff" stopOpacity="0.06" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.14" />
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
+              <stop offset="35%" stopColor="#ffffff" stopOpacity="0.06" />
+              <stop offset="65%" stopColor="#3b2b68" stopOpacity="0.12" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.2" />
             </linearGradient>
             <linearGradient id="corkGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#d4ab7c" />
-              <stop offset="50%" stopColor="#b98d5f" />
-              <stop offset="100%" stopColor="#9d7a52" />
+              <stop offset="0%" stopColor="#dfba8f" />
+              <stop offset="100%" stopColor="#a47748" />
+            </linearGradient>
+            <linearGradient id="goldPendant" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fff0ad" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#b45309" />
             </linearGradient>
             <filter id="starGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
@@ -81,17 +85,17 @@ export function Bottle({
             </clipPath>
           </defs>
 
-          {/* 瓶底阴影 */}
-          <ellipse cx="100" cy="298" rx="58" ry="8" fill="rgba(0,0,0,0.3)" />
+          {/* 瓶底柔和阴影 */}
+          <ellipse cx="100" cy="292" rx="60" ry="9" fill="rgba(0,0,0,0.36)" />
 
           <g clipPath="url(#bottleClip)">
-            {/* 玻璃体积感：随瓶身轮廓裁剪，避免出现硬边内框 */}
-            <rect x="25" y="55" width="150" height="235" fill="url(#glassGrad)" />
+            {/* 玻璃体积感 */}
+            <rect x="20" y="70" width="160" height="220" fill="url(#glassGrad)" />
 
             {/* 液体 */}
             <motion.rect
-              x="42"
-              width="116"
+              x="25"
+              width="150"
               fill="url(#waterGrad)"
               initial={false}
               animate={{ y: waterTop, height: waterBottom - waterTop }}
@@ -103,9 +107,9 @@ export function Bottle({
             {/* 水面高光 */}
             <motion.ellipse
               cx="100"
-              fill="rgba(255,255,255,0.25)"
-              rx="54"
-              ry="3"
+              fill="rgba(255,255,255,0.35)"
+              rx="62"
+              ry="4.5"
               initial={false}
               animate={{ cy: waterTop }}
               transition={{ type: "spring", stiffness: 60, damping: 16 }}
@@ -123,7 +127,7 @@ export function Bottle({
                     type: "spring",
                     stiffness: 140,
                     damping: 11,
-                    delay: i * 0.06,
+                    delay: i * 0.05,
                   }}
                   data-testid={`ball-${shown.length - 1 - i}`}
                 >
@@ -134,42 +138,91 @@ export function Bottle({
               );
             })}
 
-            {/* 两侧极细竖向高光，点到即止 */}
+            {/* 奶萌饱满弧光 */}
             <path
-              d="M48 135 Q51 190 48 248"
+              d="M42 150 C38 190 48 238 72 262"
               fill="none"
-              stroke="rgba(255,255,255,0.15)"
-              strokeWidth="2"
+              stroke="rgba(255,255,255,0.4)"
+              strokeWidth="3"
               strokeLinecap="round"
             />
-            <path
-              d="M152 135 Q149 190 152 248"
-              fill="none"
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
+            <circle cx="56" cy="138" r="4" fill="rgba(255,255,255,0.5)" />
           </g>
 
-          {/* 瓶身轮廓置于最上层，保证瓶口/瓶底边缘清晰 */}
+          {/* 瓶身轮廓置于最上层，保证外沿清晰 */}
           <path
             d={BOTTLE_SHAPE_PATH}
             fill="none"
-            stroke="rgba(255,255,255,0.32)"
+            stroke="rgba(255,255,255,0.36)"
             strokeWidth="2.5"
             strokeLinejoin="round"
           />
 
-          {/* 圆形木塞 */}
-          <rect x="82" y="36" width="36" height="18" rx="9" fill="url(#corkGrad)" />
-          <rect x="77" y="50" width="46" height="11" rx="5.5" fill="rgba(196,154,108,0.9)" />
+          {/* 翻卷圆口 (Rolled Lip) */}
+          <ellipse
+            cx="100"
+            cy="82"
+            rx="28"
+            ry="5.5"
+            fill="none"
+            stroke="rgba(255,255,255,0.65)"
+            strokeWidth="2"
+          />
+
+          {/* 扁圆大蘑菇木塞 */}
+          <ellipse cx="100" cy="65" rx="26" ry="12" fill="url(#corkGrad)" />
+          <ellipse cx="100" cy="60" rx="22" ry="8" fill="#e7c8a3" />
+
+          {/* 瓶颈系绳 */}
+          <path d="M68 98 Q100 102 132 98" fill="none" stroke="#d97706" strokeWidth="1.8" />
+
+          {/* 左侧：微光小金月亮吊坠 (轻柔摇摆) */}
+          <motion.g
+            style={{ transformOrigin: "68px 98px" }}
+            animate={{ rotate: [-4, 6, -4] }}
+            transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <path
+              d="M68 98 Q58 112 60 124"
+              fill="none"
+              stroke="#d97706"
+              strokeWidth="1.5"
+              strokeDasharray="2 1"
+            />
+            <path
+              d="M60 124 A 7.5 7.5 0 1 0 67 134 A 6 6 0 1 1 60 124 Z"
+              fill="url(#goldPendant)"
+              filter="drop-shadow(0 0 3px rgba(245,158,11,0.65))"
+            />
+          </motion.g>
+
+          {/* 右侧：软萌便签吊牌 (Tag) */}
+          <motion.g
+            transform="translate(132, 106) rotate(12)"
+            animate={{ rotate: [10, 14, 10] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <rect
+              x="0"
+              y="0"
+              width="22"
+              height="32"
+              rx="4"
+              fill="#faf6ed"
+              className="drop-shadow-md"
+            />
+            <circle cx="11" cy="6" r="2" fill="#d97706" />
+            <line x1="5" y1="14" x2="17" y2="14" stroke="#c9bfa8" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="5" y1="20" x2="15" y2="20" stroke="#c9bfa8" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M11 26 L12 24 L13 26 Z" fill="#fbbf24" />
+          </motion.g>
 
           {count > MAX_BALLS && (
             <text
               x="100"
-              y="185"
+              y="175"
               textAnchor="middle"
-              className="fill-milk text-[14px] font-semibold"
+              className="fill-milk text-[14px] font-semibold drop-shadow"
             >
               +{count - MAX_BALLS}
             </text>
