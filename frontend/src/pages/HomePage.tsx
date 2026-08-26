@@ -194,7 +194,7 @@ export function HomePage() {
 function SummaryTile({ label, value }: { label: string; value: string }) {
   return (
     <Card className="border-glass-border bg-glass text-center backdrop-blur-xl">
-      <CardContent className="flex flex-col items-center gap-1 py-3 text-center sm:py-5">
+      <CardContent className="flex flex-col items-center gap-1 px-[15px] py-3 text-center sm:py-5">
         <span className="text-[11px] text-milk-dim sm:text-xs">{label}</span>
         <span className="text-xl font-bold text-star-amber drop-shadow-sm sm:text-3xl">{value}</span>
       </CardContent>
