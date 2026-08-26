@@ -53,6 +53,24 @@ export function Bottle({
           data-testid="bottle"
         >
           <defs>
+            <style>{`
+              @keyframes tagSway {
+                0%, 100% { transform: rotate(0deg); }
+                50% { transform: rotate(-7deg); }
+              }
+              @keyframes moonSway {
+                0%, 100% { transform: rotate(0deg); }
+                50% { transform: rotate(8deg); }
+              }
+              .sway-tag {
+                transform-origin: 68px 98px;
+                animation: tagSway 4.5s ease-in-out infinite;
+              }
+              .sway-moon {
+                transform-origin: 132px 98px;
+                animation: moonSway 4s ease-in-out infinite;
+              }
+            `}</style>
             <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#fde68a" stopOpacity="0.5" />
               <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.7" />
@@ -66,7 +84,8 @@ export function Bottle({
             </linearGradient>
             <linearGradient id="corkGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#dfba8f" />
-              <stop offset="100%" stopColor="#a47748" />
+              <stop offset="50%" stopColor="#c19363" />
+              <stop offset="100%" stopColor="#8d6238" />
             </linearGradient>
             <linearGradient id="goldPendant" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#fff0ad" />
@@ -91,6 +110,9 @@ export function Bottle({
           <g clipPath="url(#bottleClip)">
             {/* 玻璃体积感 */}
             <rect x="20" y="70" width="160" height="220" fill="url(#glassGrad)" />
+
+            {/* 插入瓶颈内部的木塞下段（隐约透光可见） */}
+            <path d="M78 78 L81 94 Q100 97 119 94 L122 78 Z" fill="#b98d5f" opacity="0.6" />
 
             {/* 液体 */}
             <motion.rect
@@ -158,7 +180,7 @@ export function Bottle({
             strokeLinejoin="round"
           />
 
-          {/* 翻卷圆口 (Rolled Lip) */}
+          {/* 翻卷水晶瓶口 (Rolled Lip) */}
           <ellipse
             cx="100"
             cy="82"
@@ -169,53 +191,67 @@ export function Bottle({
             strokeWidth="2"
           />
 
-          {/* 扁圆大蘑菇木塞 */}
-          <ellipse cx="100" cy="65" rx="26" ry="12" fill="url(#corkGrad)" />
-          <ellipse cx="100" cy="60" rx="22" ry="8" fill="#e7c8a3" />
+          {/* 严丝合缝盖在瓶口上的大圆润蘑菇木塞 */}
+          {/* 木塞上部圆顶 */}
+          <path
+            d="M74 80 C74 58 126 58 126 80 Q100 85 74 80 Z"
+            fill="url(#corkGrad)"
+          />
+          {/* 木塞顶部高光弧 */}
+          <ellipse cx="100" cy="67" rx="22" ry="7" fill="#e7c8a3" />
+          {/* 木塞与瓶口贴合处压边阴影 */}
+          <path
+            d="M74 80 Q100 85 126 80"
+            fill="none"
+            stroke="#6e4720"
+            strokeWidth="1.5"
+            opacity="0.7"
+          />
 
           {/* 瓶颈系绳 */}
           <path d="M68 98 Q100 102 132 98" fill="none" stroke="#d97706" strokeWidth="1.8" />
 
-          {/* 左侧：微光小金月亮吊坠 (轻柔摇摆) */}
-          <motion.g
-            style={{ transformOrigin: "68px 98px" }}
-            animate={{ rotate: [-4, 6, -4] }}
-            transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
-          >
+          {/* 左侧：软萌便签吊牌 (Tag - 微微摇摆) */}
+          <g className="sway-tag">
             <path
-              d="M68 98 Q58 112 60 124"
+              d="M68 98 Q58 108 52 118"
+              fill="none"
+              stroke="#d97706"
+              strokeWidth="1.5"
+              strokeDasharray="2 1"
+            />
+            <g transform="translate(40, 114) rotate(-8)">
+              <rect
+                x="0"
+                y="0"
+                width="22"
+                height="32"
+                rx="4"
+                fill="#faf6ed"
+                className="drop-shadow-md"
+              />
+              <circle cx="11" cy="6" r="2" fill="#d97706" />
+              <line x1="5" y1="14" x2="17" y2="14" stroke="#c9bfa8" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="5" y1="20" x2="15" y2="20" stroke="#c9bfa8" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M11 26 L12 24 L13 26 Z" fill="#fbbf24" />
+            </g>
+          </g>
+
+          {/* 右侧：微光小金月亮吊坠 (微微摇摆) */}
+          <g className="sway-moon">
+            <path
+              d="M132 98 Q142 110 140 124"
               fill="none"
               stroke="#d97706"
               strokeWidth="1.5"
               strokeDasharray="2 1"
             />
             <path
-              d="M60 124 A 7.5 7.5 0 1 0 67 134 A 6 6 0 1 1 60 124 Z"
+              d="M140 124 A 7.5 7.5 0 1 1 133 134 A 6 6 0 1 0 140 124 Z"
               fill="url(#goldPendant)"
               filter="drop-shadow(0 0 3px rgba(245,158,11,0.65))"
             />
-          </motion.g>
-
-          {/* 右侧：软萌便签吊牌 (Tag) */}
-          <motion.g
-            transform="translate(132, 106) rotate(12)"
-            animate={{ rotate: [10, 14, 10] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <rect
-              x="0"
-              y="0"
-              width="22"
-              height="32"
-              rx="4"
-              fill="#faf6ed"
-              className="drop-shadow-md"
-            />
-            <circle cx="11" cy="6" r="2" fill="#d97706" />
-            <line x1="5" y1="14" x2="17" y2="14" stroke="#c9bfa8" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="5" y1="20" x2="15" y2="20" stroke="#c9bfa8" strokeWidth="1.5" strokeLinecap="round" />
-            <path d="M11 26 L12 24 L13 26 Z" fill="#fbbf24" />
-          </motion.g>
+          </g>
 
           {count > MAX_BALLS && (
             <text
