@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./xiaolai.css";
 
 /* 寒蝉活宋体：系统界面文字（本地分片，构建产物随 dist 托管） */
 @font-face{font-family:"ChillHuoSong_F";src:local("ChillHuoSong_F"),url("/fonts/b44c32ceebcda804.woff2")format("woff2");font-style:normal;font-display:swap;font-weight:400;unicode-range:U+2002,U+2009,U+200B,U+2010,U+2015,U+201A,U+201E,U+2020-2021,U+2025,U+2032-2033,U+2039-203B,U+2044,U+2048-2049,U+2074,U+20AC,U+2122,U+2160-2161,U+FF35-FF3A,U+FF3C,U+FF41-FF5A,U+FFE0-FFE1,U+FFE5;}
@@ -300,8 +301,10 @@
 @theme {
   --font-sans: "ChillHuoSong_F", "Noto Serif SC Variable", "Songti SC",
     "SimSun", serif;
-  --font-input: "Microsoft YaHei", "微软雅黑", "PingFang SC",
-    "Noto Sans SC Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-input: "Xiaolai SC", "Xiaolai Mono SC", "Kosefont-JP", "小赖字体 SC",
+    "小赖字体", "小濑字体", "NaikaiFont", "内海字体", "SetoFont", "瀨戶字體",
+    "Microsoft YaHei", "微软雅黑", "PingFang SC", "Noto Sans SC Variable",
+    ui-sans-serif, system-ui, sans-serif;
 
   /* 夜空 */
   --color-night-900: #0b0a1a;
