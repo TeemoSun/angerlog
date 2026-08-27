@@ -5,7 +5,7 @@ import { intensityColor } from "@/lib/utils";
 
 export const WATER_MAX_COUNT = 30;
 
-// 软萌陪伴布丁瓶造型：矮胖圆鼓瓶身（x28-172, y~82-276）+ 翻卷圆口（y82）+ 严密木塞 + 便签吊牌(左) + 月亮吊坠(右)
+// 软萌陪伴布丁瓶造型：矮胖圆鼓瓶身（x28-172, y~82-276）+ 翻卷圆口（y82）+ 严密木塞 + 月亮吊坠(右)
 export const BOTTLE_SHAPE_PATH =
   "M72 82 H128 V98 C145 106 172 135 172 205 C172 258 145 276 100 276 C55 276 28 258 28 205 C28 135 55 106 72 98 Z";
 
@@ -54,17 +54,9 @@ export function Bottle({
         >
           <defs>
             <style>{`
-              @keyframes tagSway {
-                0%, 100% { transform: rotate(0deg); }
-                50% { transform: rotate(-7deg); }
-              }
               @keyframes moonSway {
                 0%, 100% { transform: rotate(0deg); }
                 50% { transform: rotate(8deg); }
-              }
-              .sway-tag {
-                transform-origin: 68px 98px;
-                animation: tagSway 4.5s ease-in-out infinite;
               }
               .sway-moon {
                 transform-origin: 132px 98px;
@@ -211,31 +203,6 @@ export function Bottle({
           {/* 瓶颈系绳 */}
           <path d="M68 98 Q100 102 132 98" fill="none" stroke="#d97706" strokeWidth="1.8" />
 
-          {/* 左侧：软萌便签吊牌 (Tag - 微微摇摆) */}
-          <g className="sway-tag">
-            <path
-              d="M68 98 Q58 108 52 118"
-              fill="none"
-              stroke="#d97706"
-              strokeWidth="1.5"
-              strokeDasharray="2 1"
-            />
-            <g transform="translate(40, 114) rotate(-8)">
-              <rect
-                x="0"
-                y="0"
-                width="22"
-                height="32"
-                rx="4"
-                fill="#faf6ed"
-                className="drop-shadow-md"
-              />
-              <circle cx="11" cy="6" r="2" fill="#d97706" />
-              <line x1="5" y1="14" x2="17" y2="14" stroke="#c9bfa8" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="5" y1="20" x2="15" y2="20" stroke="#c9bfa8" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M11 26 L12 24 L13 26 Z" fill="#fbbf24" />
-            </g>
-          </g>
 
           {/* 右侧：微光小金月亮吊坠 (微微摇摆) */}
           <g className="sway-moon">
