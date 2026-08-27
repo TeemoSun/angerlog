@@ -347,7 +347,10 @@ export function StatsPanel() {
                   tick={{ fill: "#c9bfa8", fontSize: 11 }}
                   domain={[0, (dataMax: number) => Math.max(dataMax > 0 ? Math.ceil(dataMax * 1.25) : 3, 3)]}
                 />
-                <Tooltip content={<ChartTooltip granularity={granularity} />} />
+                <Tooltip
+                  content={<ChartTooltip granularity={granularity} />}
+                  cursor={{ stroke: "rgba(251, 191, 36, 0.2)", strokeWidth: 1, strokeDasharray: "3 3" }}
+                />
                 <Area
                   type="monotone"
                   dataKey="count"
@@ -355,9 +358,15 @@ export function StatsPanel() {
                   stroke="#fbbf24"
                   strokeWidth={2.5}
                   fill="url(#trendGradient)"
-                  dot={{ r: 3.5, fill: "#fbbf24", stroke: "#0b0a1a", strokeWidth: 2 }}
-                  activeDot={{ r: 5.5, fill: "#f6d365", stroke: "#0b0a1a", strokeWidth: 2 }}
-                  style={{ filter: "drop-shadow(0 0 6px rgba(251,191,36,0.45))" }}
+                  dot={false}
+                  activeDot={{
+                    r: 5,
+                    fill: "#fbbf24",
+                    stroke: "#ffffff",
+                    strokeWidth: 2,
+                    strokeOpacity: 0.95,
+                  }}
+                  style={{ filter: "drop-shadow(0 0 6px rgba(251,191,36,0.35))" }}
                 />
               </AreaChart>
             </ResponsiveContainer>
