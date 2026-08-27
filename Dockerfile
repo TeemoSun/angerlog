@@ -4,10 +4,10 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm ci || npm install
 COPY frontend/ ./
-RUN npm run build
+RUN npm run build && rm -rf dist/fonts
 
 # ===== Stage 2: 后端依赖（uv 仅在此阶段使用，不进运行时镜像）=====
-# 用 alpine 装依赖 + 运行时，全程 glibc-free，体积最小（~157MB）
+# 用 alpine 装依赖 + 运行时，全程 glibc-free，体积最小（~171MB 含全套手写体+宋体切片）
 FROM python:3.12-alpine AS backend-deps
 # 安装 uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
@@ -22,7 +22,7 @@ WORKDIR /app/backend
 COPY backend/pyproject.toml backend/uv.lock* ./
 RUN uv sync --frozen --no-dev && rm -rf /tmp/uv-cache
 
-# ===== Stage 3: 运行时 =====
+# ===== Stage 3: 运行时（按变更频率由低到高分层缓存）=====
 FROM python:3.12-alpine AS runtime
 # 后端基础镜像切到 alpine 后，uvicorn 将使用纯 asyncio 事件循环：
 # uvloop/httptools 只在 glibc 下有 wheel，musl 下 uv sync 自动跳过它们
@@ -31,8 +31,17 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app/backend
+
+# Layer 1: 运行时依赖环境（极低频变动，~77MB）
 COPY --from=backend-deps /opt/venv /opt/venv
+
+# Layer 2: 前端大体积静态切片字体（极低频变动，~33MB，独立分层长期缓存）
+COPY frontend/public/fonts /app/frontend/dist/fonts
+
+# Layer 3: 后端业务代码（中/高频变动，~320KB）
 COPY backend/ ./
+
+# Layer 4: 前端编译生成的日常业务代码与样式（最高频变动，~11MB，推送压缩后~3MB）
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
 EXPOSE 8000

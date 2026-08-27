@@ -13,13 +13,18 @@
 
 `Dockerfile` 为多阶段构建（3 阶段）：
 
-- **Stage 1 `frontend-builder`**：基于 `node:20-bookworm-slim`，执行 `npm ci`（回退 `npm install`）+ `npm run build`，产出 `frontend/dist`。
+- **Stage 1 `frontend-builder`**：基于 `node:20-bookworm-slim`，执行 `npm ci`（回退 `npm install`）+ `npm run build`，产出 `frontend/dist`（构建完成后剔除重复的 `fonts`，由独立层接管）。
 - **Stage 2 `backend-deps`**：基于 `python:3.12-alpine`，安装 `uv`（来自 `ghcr.io/astral-sh/uv:latest`），`uv sync --frozen --no-dev` 安装后端依赖到 `/opt/venv`，随后删除 uv 缓存目录（避免缓存层带入运行时镜像）。
-- **Stage 3 `runtime`**：同样基于 `python:3.12-alpine`，只拷入 Stage 2 的 `/opt/venv` 与后端代码、前端 `dist`，暴露 `8000` 端口，以 uvicorn 启动。uv 二进制不进运行时镜像。
+- **Stage 3 `runtime`**：基于 `python:3.12-alpine`，**按变更频率从低到高分层缓存**：
+  1. `/opt/venv` 依赖层（极低频，~77MB）
+  2. `frontend/public/fonts` 静态切片字体资产层（极低频，~33MB，独立分层长期缓存）
+  3. 后端应用业务代码（高频，~320KB）
+  4. 前端应用 JS/CSS 产物（最高频，~11MB，推送压缩后仅约 3MB）
+  暴露 `8000` 端口，以 uvicorn 启动。uv 二进制不进运行时镜像。
 
-> 当前镜像约 **157MB**（历史 glibc 版约 351MB）。体积优化点：
-> - 依赖安装与运行时分层，`uv`（53MB）与 `uv` 缓存（66MB）留在构建阶段。
-> - 基础镜像 `slim` → `alpine`（musl，约再省 75MB）。
+> 当前镜像约 **171MB**（含寒蝉活宋 + 小赖手写体全套中文字库切片）。
+> - **分层缓存优化**：将 33MB 静态字体层与前端日常业务代码彻底解耦，日常修改前端只需推送 ~3MB 压缩增量，推送提速 90% 以上！
+> - 基础镜像采用 `alpine`（musl 架构）。
 >
 > **注意**：alpine 下 uvicorn 走纯 asyncio 事件循环（uvloop/httptools 仅 glibc 有 wheel，musl 下 `uv sync` 自动跳过，属锁文件条件项行为，非配置缺失）；后端代码本身不依赖 glibc，逻辑不变。
 
