@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/Logo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,11 +54,11 @@ export function LoginPage() {
           <div className="h-2 bg-gradient-to-r from-star-gold via-star-amber to-star-orange" />
           <CardHeader className="items-center pt-8 text-center">
             <motion.div
-              className="mb-3 text-6xl drop-shadow-lg"
+              className="mb-3 drop-shadow-md"
               animate={{ y: [0, -6, 0], rotate: [0, 3, -3, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             >
-              🫙
+              <Logo size={56} />
             </motion.div>
             <CardTitle className="text-4xl font-normal tracking-wide text-ink">
               情绪瓶

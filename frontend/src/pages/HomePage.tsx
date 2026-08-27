@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Bottle } from "@/components/Bottle";
 import { LogFormDialog } from "@/components/LogFormDialog";
 import { LogList } from "@/components/LogList";
+import { Logo } from "@/components/Logo";
 import { ResolveDialog } from "@/components/ResolveDialog";
 import { StatsPanel } from "@/components/StatsPanel";
 import { TabBar, type TabKey } from "@/components/TabBar";
@@ -108,7 +109,7 @@ export function HomePage() {
       <header className="sticky top-0 z-30 border-b border-white/10 bg-night-900/40 backdrop-blur-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-2.5">
-            <span className="text-2xl drop-shadow-md">🫙</span>
+            <Logo size={28} className="drop-shadow-md" />
             <h1 className="text-2xl font-normal tracking-wide text-paper">情绪瓶</h1>
           </div>
           <TabBar active={tab} onChange={setTab} />
