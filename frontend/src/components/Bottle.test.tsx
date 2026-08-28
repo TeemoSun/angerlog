@@ -49,7 +49,7 @@ describe("Bottle", () => {
         onOpenStyleSelector={handleOpenStyle}
       />,
     );
-    const bottleBtn = screen.getByRole("button", { name: /轻按扔一颗星星/ });
+    const bottleBtn = screen.getByRole("button", { name: /扔一颗星星/ });
     fireEvent.pointerDown(bottleBtn);
     fireEvent.pointerUp(bottleBtn);
     expect(handleOpenForm).toHaveBeenCalled();

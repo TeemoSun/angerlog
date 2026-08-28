@@ -97,7 +97,7 @@ export function Bottle({
           }
         }}
         className="group relative cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-star-gold/50 rounded-2xl"
-        aria-label="轻按扔一颗星星，长按更换瓶子造型"
+        aria-label="扔一颗星星"
       >
         <motion.div
           animate={{ scale: isPressing ? 0.96 : 1 }}
@@ -188,25 +188,14 @@ export function Bottle({
           </svg>
         </motion.div>
 
-        {/* 顶部悬浮操作提示标签 */}
-        <div className="pointer-events-none absolute left-1/2 top-[6px] -translate-x-1/2 flex items-center gap-1.5 whitespace-nowrap rounded-full bg-star-gold/15 px-3.5 py-1 text-xs font-medium text-star-gold ring-1 ring-star-gold/30 backdrop-blur-md transition group-hover:scale-105 group-hover:bg-star-gold/25 shadow-lg">
-          <span>✨ 轻按投星 · 长按换瓶</span>
-        </div>
+        <span className="pointer-events-none absolute left-1/2 top-[6px] -translate-x-1/2 rounded-full bg-star-gold/15 px-3 py-1 text-xs font-medium text-star-gold ring-1 ring-star-gold/30 backdrop-blur-md transition group-hover:scale-105 group-hover:bg-star-gold/25">
+          ✨ 扔一颗星星
+        </span>
       </div>
 
-      <div className="flex items-center gap-2 text-sm text-milk-dim">
-        <p>
-          瓶内 <span className="font-semibold text-star-amber">{count}</span> 颗星星
-        </p>
-        <span className="text-white/20">|</span>
-        <button
-          type="button"
-          onClick={onOpenStyleSelector}
-          className="text-xs text-camel hover:text-star-gold transition underline underline-offset-4 decoration-camel/40 hover:decoration-star-gold"
-        >
-          更换瓶身
-        </button>
-      </div>
+      <p className="text-sm text-milk-dim">
+        瓶内 <span className="font-semibold text-star-amber">{count}</span> 颗星星
+      </p>
     </div>
   );
 }
