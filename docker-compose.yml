@@ -19,7 +19,7 @@ services:
       start_period: 10s
 
   backend:
-    image: pigzho/angerlog:latest
+    image: ghcr.io/teemosun/angerlog:latest
     build:
       context: .
     container_name: angerlog

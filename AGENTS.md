@@ -58,9 +58,9 @@ npm run test         # vitest run，12 个用例（已全绿）
 
 ## Docker 打包上传
 
-详见 `docs/Docker镜像打包上传.md`，一键 `DOCKER_USER=pigzho bash scripts/docker-push.sh`：
+详见 `docs/Docker镜像打包上传.md`，支持 GitHub Actions 自动构建发布与本地一键 `bash scripts/docker-push.sh`：
 
 - 3 阶段：Stage1 node:20 跑 `npm ci`(回退 `npm install`) + `npm run build`；Stage2 python:3.12-alpine + uv（`uv sync --frozen --no-dev`，装完删 uv 缓存）；Stage3 python:3.12-alpine 只拷 venv+代码，uvicorn 启动，HEALTHCHECK 探 `/health`。**uv 不进运行时镜像**。
-- **tag 规范**：同时打 `pigzho/angerlog:latest` 与 `pigzho/angerlog:<YYYYMMDD>`（当日日期），**不用 commit hash**。
+- **tag 规范**：自动打 `ghcr.io/teemosun/angerlog:latest`、`ghcr.io/teemosun/angerlog:<YYYYMMDD>`、`sha-xxxxxxx`、`vX.Y.Z`。
 - `uv.lock` / `package-lock.json` 必须与依赖同步，否则 `--frozen` / `npm ci` 构建失败（改依赖后跑 `uv sync` / `npm install` 更新锁文件）。
 - 运行时基础镜像用 **alpine**（非 slim）：uvloop/httptools 只有 glibc wheel，musl 下被跳过、uvicorn 走纯 asyncio，属锁文件条件项行为，别当成 bug "修"回去。
