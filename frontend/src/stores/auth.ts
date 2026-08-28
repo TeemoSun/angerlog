@@ -3,8 +3,10 @@ import { create } from "zustand";
 interface AuthState {
   csrfToken: string | null;
   timezone: string | null;
+  bottleStyle: string;
   restored: boolean;
-  setCsrfToken: (token: string, timezone?: string | null) => void;
+  setCsrfToken: (token: string, timezone?: string | null, bottleStyle?: string | null) => void;
+  setBottleStyle: (bottleStyle: string) => void;
   clear: () => void;
   onSessionExpired: () => void;
 }
@@ -20,12 +22,19 @@ function notifyExpired() {
 export const useAuthStore = create<AuthState>()((set) => ({
   csrfToken: null,
   timezone: null,
+  bottleStyle: "C",
   restored: false,
-  setCsrfToken: (token, timezone) =>
-    set({ csrfToken: token, timezone: timezone ?? null, restored: true }),
-  clear: () => set({ csrfToken: null, timezone: null, restored: false }),
+  setCsrfToken: (token, timezone, bottleStyle) =>
+    set((state) => ({
+      csrfToken: token,
+      timezone: timezone ?? null,
+      bottleStyle: bottleStyle ?? state.bottleStyle,
+      restored: true,
+    })),
+  setBottleStyle: (bottleStyle) => set({ bottleStyle }),
+  clear: () => set({ csrfToken: null, timezone: null, bottleStyle: "C", restored: false }),
   onSessionExpired: () => {
-    set({ csrfToken: null, timezone: null, restored: false });
+    set({ csrfToken: null, timezone: null, bottleStyle: "C", restored: false });
     notifyExpired();
   },
 }));

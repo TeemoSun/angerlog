@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Bottle } from "@/components/Bottle";
+import { BottleStyleDialog } from "@/components/BottleStyleDialog";
 import { LogFormDialog } from "@/components/LogFormDialog";
 import { LogList } from "@/components/LogList";
 import { Logo } from "@/components/Logo";
@@ -12,9 +13,10 @@ import { TabBar, type TabKey } from "@/components/TabBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { errorMessage } from "@/lib/api";
-import { fetchLogs, fetchSummary } from "@/lib/requests";
+import { fetchLogs, fetchSummary, updateBottleStyleRequest } from "@/lib/requests";
 import type { LogItem, PageMeta, Summary } from "@/lib/types";
 import { startOfThisWeekStr, todayStr } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth";
 import { useLogsStore } from "@/stores/logs";
 
 const PAGE_SIZE = 20;
@@ -26,8 +28,10 @@ export function HomePage() {
   const [page, setPage] = useState(1);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [styleDialogOpen, setStyleDialogOpen] = useState(false);
   const [resolveTarget, setResolveTarget] = useState<LogItem | null>(null);
   const [error, setError] = useState("");
+  const { bottleStyle, setBottleStyle } = useAuthStore();
   const { filters } = useLogsStore();
   const navigate = useNavigate();
 
@@ -94,6 +98,15 @@ export function HomePage() {
     [loadSummary, loadLogs],
   );
 
+  const handleSelectStyle = async (newStyle: string) => {
+    setBottleStyle(newStyle);
+    try {
+      await updateBottleStyleRequest(newStyle);
+    } catch (err) {
+      setError(errorMessage(err));
+    }
+  };
+
   const handleLogout = async () => {
     try {
       const { logoutRequest } = await import("@/lib/requests");
@@ -142,7 +155,12 @@ export function HomePage() {
           >
             {tab === "bottle" && (
               <div className="flex flex-1 flex-col items-center justify-center gap-6">
-                <Bottle logs={logs} onOpenForm={() => setFormOpen(true)} />
+                <Bottle
+                  logs={logs}
+                  onOpenForm={() => setFormOpen(true)}
+                  onOpenStyleSelector={() => setStyleDialogOpen(true)}
+                  styleKey={bottleStyle}
+                />
                 <div className="grid w-full max-w-2xl grid-cols-3 gap-2 sm:gap-4">
                   <SummaryTile
                     label="本周已记录"
@@ -180,6 +198,12 @@ export function HomePage() {
       </main>
 
       <LogFormDialog open={formOpen} onOpenChange={setFormOpen} onCreated={handleCreated} />
+      <BottleStyleDialog
+        open={styleDialogOpen}
+        onOpenChange={setStyleDialogOpen}
+        currentStyle={bottleStyle}
+        onSelectStyle={handleSelectStyle}
+      />
       <ResolveDialog
         log={resolveTarget}
         onClose={() => setResolveTarget(null)}

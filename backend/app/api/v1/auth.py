@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core import errors, security
 from app.core.config import get_settings
 from app.core.database import get_db
-from app.core.dependencies import client_ip, login_limiter
+from app.core.dependencies import client_ip, csrf_protect, get_current_user, login_limiter
 from app.models import User
 from app.repositories import auth_repository
-from app.schemas.schemas import LoginRequest, envelope
+from app.schemas.schemas import BottleStyleUpdate, LoginRequest, envelope
 from app.services import auth_service
 
 settings = get_settings()
@@ -63,7 +63,12 @@ async def login(
     _set_refresh_cookie(response, refresh_raw)
     csrf_token = security.issue_csrf_token(access_token)
     return envelope(
-        {"csrf_token": csrf_token, "username": user.username, "timezone": user.timezone}
+        {
+            "csrf_token": csrf_token,
+            "username": user.username,
+            "timezone": user.timezone,
+            "bottle_style": user.bottle_style,
+        }
     )
 
 
@@ -84,8 +89,37 @@ async def refresh(request: Request, response: Response, db: AsyncSession = Depen
     _set_access_cookie(response, access_token)
     _set_refresh_cookie(response, new_raw)
     return envelope(
-        {"csrf_token": security.issue_csrf_token(access_token), "timezone": user.timezone}
+        {
+            "csrf_token": security.issue_csrf_token(access_token),
+            "timezone": user.timezone,
+            "bottle_style": user.bottle_style,
+        }
     )
+
+
+@router.get("/me")
+async def get_me(user: User = Depends(get_current_user)):
+    return envelope(
+        {
+            "username": user.username,
+            "timezone": user.timezone,
+            "bottle_style": user.bottle_style,
+        }
+    )
+
+
+@router.put("/bottle-style")
+@router.patch("/bottle-style")
+async def update_bottle_style(
+    body: BottleStyleUpdate,
+    auth_data: tuple[User, str] = Depends(csrf_protect),
+    db: AsyncSession = Depends(get_db),
+):
+    user, _ = auth_data
+    updated = await auth_repository.update_user_bottle_style(db, user.id, body.bottle_style)
+    if updated is None:
+        raise errors.E_UNAUTHORIZED
+    return envelope({"bottle_style": updated.bottle_style})
 
 
 @router.post("/logout")

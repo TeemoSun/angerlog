@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import { Bottle, waterLevelPercent } from "@/components/Bottle";
 
@@ -37,5 +37,37 @@ describe("Bottle", () => {
     expect(emptyLevel).toBe("15");
     expect(fullLevel).toBe("68");
     expect(fullLevel).not.toBe(emptyLevel);
+  });
+
+  it("短按触发写信弹窗", () => {
+    const handleOpenForm = vi.fn();
+    const handleOpenStyle = vi.fn();
+    render(
+      <Bottle
+        logs={[]}
+        onOpenForm={handleOpenForm}
+        onOpenStyleSelector={handleOpenStyle}
+      />,
+    );
+    const bottleBtn = screen.getByRole("button", { name: /轻按扔一颗星星/ });
+    fireEvent.pointerDown(bottleBtn);
+    fireEvent.pointerUp(bottleBtn);
+    expect(handleOpenForm).toHaveBeenCalled();
+    expect(handleOpenStyle).not.toHaveBeenCalled();
+  });
+
+  it("支持渲染不同瓶身样式", () => {
+    const styles = ["A", "B", "C", "D", "E", "F", "G", "H", "classic"];
+    styles.forEach((styleKey) => {
+      const { unmount } = render(
+        <Bottle
+          logs={[{ intensity: 5 }]}
+          onOpenForm={() => {}}
+          styleKey={styleKey}
+        />,
+      );
+      expect(screen.getByTestId("bottle")).toBeInTheDocument();
+      unmount();
+    });
   });
 });

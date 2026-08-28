@@ -4,12 +4,23 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.models.entities import CATEGORIES
+from app.models.entities import BOTTLE_STYLES, CATEGORIES
 
 
 class LoginRequest(BaseModel):
     username: str = Field(min_length=1, max_length=50)
     password: str = Field(min_length=1, max_length=128)
+
+
+class BottleStyleUpdate(BaseModel):
+    bottle_style: str = Field(min_length=1, max_length=20)
+
+    @field_validator("bottle_style")
+    @classmethod
+    def validate_style(cls, v: str) -> str:
+        if v not in BOTTLE_STYLES:
+            raise ValueError(f"bottle_style must be one of {list(BOTTLE_STYLES)}")
+        return v
 
 
 class LogCreate(BaseModel):

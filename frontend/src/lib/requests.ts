@@ -80,8 +80,17 @@ export async function fetchHeatmap(startDate?: string, endDate?: string): Promis
   return unwrap(res.data);
 }
 
-export async function fetchMe(): Promise<{ username: string }> {
-  const res = await api.get<Envelope<{ username: string }>>("/auth/me");
+export async function fetchMe(): Promise<{ username: string; timezone: string; bottle_style: string }> {
+  const res = await api.get<Envelope<{ username: string; timezone: string; bottle_style: string }>>("/auth/me");
+  return unwrap(res.data);
+}
+
+export async function updateBottleStyleRequest(
+  bottleStyle: string,
+): Promise<{ bottle_style: string }> {
+  const res = await api.put<Envelope<{ bottle_style: string }>>("/auth/bottle-style", {
+    bottle_style: bottleStyle,
+  });
   return unwrap(res.data);
 }
 

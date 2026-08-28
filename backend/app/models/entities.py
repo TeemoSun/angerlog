@@ -19,15 +19,25 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 CATEGORIES = ("工作", "家庭", "交通", "社交", "其他")
+BOTTLE_STYLES = ("A", "B", "C", "D", "E", "F", "G", "H", "classic")
 
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        CheckConstraint(
+            "bottle_style IN ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'classic')",
+            name="ck_users_bottle_style",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     timezone: Mapped[str] = mapped_column(String(50), nullable=False, default="Asia/Shanghai")
+    bottle_style: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="C", server_default="C"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

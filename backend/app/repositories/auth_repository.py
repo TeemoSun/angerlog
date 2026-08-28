@@ -17,15 +17,36 @@ async def upsert_user(
     username: str,
     password_hash: str,
     timezone: str,
+    bottle_style: str = "C",
 ) -> User:
     user = await get_user_by_username(db, username)
     if user is None:
-        user = User(username=username, password_hash=password_hash, timezone=timezone)
+        user = User(
+            username=username,
+            password_hash=password_hash,
+            timezone=timezone,
+            bottle_style=bottle_style,
+        )
         db.add(user)
     else:
         user.password_hash = password_hash
         user.timezone = timezone
         user.updated_at = datetime.now()
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def update_user_bottle_style(
+    db: AsyncSession,
+    user_id: UUID,
+    bottle_style: str,
+) -> User | None:
+    user = await db.get(User, user_id)
+    if user is None:
+        return None
+    user.bottle_style = bottle_style
+    user.updated_at = datetime.now()
     await db.commit()
     await db.refresh(user)
     return user

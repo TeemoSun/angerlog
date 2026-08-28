@@ -29,7 +29,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       const result = await loginRequest(username.trim(), password);
-      setCsrfToken(result.csrf_token, result.timezone);
+      setCsrfToken(result.csrf_token, result.timezone, result.bottle_style);
       navigate("/", { replace: true });
     } catch (err) {
       setError(

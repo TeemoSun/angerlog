@@ -56,6 +56,7 @@ export interface LoginResult {
   csrf_token: string;
   username: string;
   timezone: string;
+  bottle_style: string;
 }
 
 export interface Envelope<T> {

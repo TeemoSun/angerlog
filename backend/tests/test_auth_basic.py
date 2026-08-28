@@ -14,6 +14,7 @@ async def test_login_success_sets_cookies(client):
     assert body["code"] == 0
     assert body["data"]["username"] == "admin"
     assert body["data"]["timezone"] == "Asia/Shanghai"
+    assert body["data"]["bottle_style"] == "C"
     assert "csrf_token" in body["data"]
     cookies = resp.cookies
     assert "access_token" in cookies

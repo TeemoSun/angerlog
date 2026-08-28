@@ -82,3 +82,37 @@ async def test_rate_limit_resets_after_success(client):
         json={"username": "admin", "password": "testpass123"},
     )
     assert resp.status_code == 200
+
+
+async def test_bottle_style_flow(client):
+    resp = await _login(client)
+    body = resp.json()["data"]
+    assert body["bottle_style"] == "C"
+    csrf = body["csrf_token"]
+
+    # update to A
+    r_update = await client.put(
+        "/api/v1/auth/bottle-style",
+        json={"bottle_style": "A"},
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert r_update.status_code == 200
+    assert r_update.json()["data"]["bottle_style"] == "A"
+
+    # get /me
+    r_me = await client.get("/api/v1/auth/me")
+    assert r_me.status_code == 200
+    assert r_me.json()["data"]["bottle_style"] == "A"
+
+    # refresh token returns updated bottle_style
+    r_refresh = await client.post("/api/v1/auth/refresh")
+    assert r_refresh.status_code == 200
+    assert r_refresh.json()["data"]["bottle_style"] == "A"
+
+    # invalid bottle style should be rejected
+    r_invalid = await client.put(
+        "/api/v1/auth/bottle-style",
+        json={"bottle_style": "Z_INVALID"},
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert r_invalid.status_code == 400

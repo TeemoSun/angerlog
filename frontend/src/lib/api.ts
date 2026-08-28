@@ -73,13 +73,13 @@ async function performRefresh(): Promise<void> {
     headers: { "Content-Type": "application/json" },
   } as CustomRequestConfig);
   const body = res.data as
-    | { data?: { csrf_token?: string; timezone?: string } }
+    | { data?: { csrf_token?: string; timezone?: string; bottle_style?: string } }
     | undefined;
   const token = body?.data?.csrf_token;
   if (!token) {
     throw new Error("refresh response missing csrf_token");
   }
-  useAuthStore.getState().setCsrfToken(token, body.data?.timezone);
+  useAuthStore.getState().setCsrfToken(token, body.data?.timezone, body.data?.bottle_style);
 }
 
 let restorePromise: Promise<boolean> | null = null;
