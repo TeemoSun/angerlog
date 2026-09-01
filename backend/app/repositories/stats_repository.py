@@ -37,24 +37,23 @@ async def get_summary(
     filters = [AngerLog.user_id == user_id, AngerLog.is_deleted.is_(False)]
     filters += _date_range_filter(start_date, end_date, tz)
 
-    count_stmt = select(func.count()).select_from(AngerLog).where(*filters)
-    total = (await db.execute(count_stmt)).scalar_one()
-
-    avg_stmt = select(func.avg(AngerLog.intensity)).select_from(AngerLog).where(*filters)
-    avg = (await db.execute(avg_stmt)).scalar_one()
-    if avg is not None:
-        avg = round(float(avg), 2)
-
-    max_stmt = select(func.max(AngerLog.intensity)).select_from(AngerLog).where(*filters)
-    max_intensity = (await db.execute(max_stmt)).scalar_one()
-
-    min_stmt = select(func.min(AngerLog.intensity)).select_from(AngerLog).where(*filters)
-    min_intensity = (await db.execute(min_stmt)).scalar_one()
-
-    resolved_stmt = (
-        select(func.count()).select_from(AngerLog).where(*filters, AngerLog.is_resolved.is_(True))
+    summary_stmt = (
+        select(
+            func.count().label("total"),
+            func.avg(AngerLog.intensity).label("avg"),
+            func.max(AngerLog.intensity).label("max_intensity"),
+            func.min(AngerLog.intensity).label("min_intensity"),
+            func.count().filter(AngerLog.is_resolved.is_(True)).label("resolved"),
+        )
+        .select_from(AngerLog)
+        .where(*filters)
     )
-    resolved = (await db.execute(resolved_stmt)).scalar_one()
+    row = (await db.execute(summary_stmt)).one()
+    total = row.total
+    avg = round(float(row.avg), 2) if row.avg is not None else None
+    max_intensity = row.max_intensity
+    min_intensity = row.min_intensity
+    resolved = row.resolved
 
     resolve_rate = round(resolved / total, 4) if total else None
 

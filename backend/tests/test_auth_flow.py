@@ -108,6 +108,7 @@ async def test_bottle_style_flow(client):
     r_refresh = await client.post("/api/v1/auth/refresh")
     assert r_refresh.status_code == 200
     assert r_refresh.json()["data"]["bottle_style"] == "A"
+    csrf = r_refresh.json()["data"]["csrf_token"]
 
     # invalid bottle style should be rejected
     r_invalid = await client.put(

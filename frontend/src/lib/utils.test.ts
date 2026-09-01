@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   daysAgoStr,
@@ -35,11 +35,16 @@ describe("timezone utils", () => {
   });
 
   it("本周周一按配置时区计算（周一=ISO 语义）", () => {
-    // 2026-08-25 是周二（Asia/Shanghai）
-    setAppTimezone("Asia/Shanghai");
-    const monday = startOfThisWeekInTz();
-    const wall = wallParts(new Date(monday));
-    expect(wall.day).toBe(24); // 2026-08-24 周一
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-25T08:00:00.000Z")); // 2026-08-25 是周二（Asia/Shanghai 16:00）
+    try {
+      setAppTimezone("Asia/Shanghai");
+      const monday = startOfThisWeekInTz();
+      const wall = wallParts(new Date(monday));
+      expect(wall.day).toBe(24); // 2026-08-24 周一
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("daysAgoStr 按配置时区的墙钟日期计算", () => {

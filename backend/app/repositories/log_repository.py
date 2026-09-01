@@ -71,16 +71,16 @@ async def list_logs(
 
 
 async def update_log(db: AsyncSession, log: AngerLog, data: LogUpdate) -> AngerLog:
-    now = data.resolved_at or datetime.now(UTC)
+    physical_now = datetime.now(UTC)
     if data.is_resolved and not log.is_resolved:
         log.is_resolved = True
-        log.resolved_at = now
+        log.resolved_at = data.resolved_at or physical_now
         log.resolution_method = data.resolution_method
     elif not data.is_resolved:
         log.is_resolved = False
         log.resolved_at = None
         log.resolution_method = None
-    log.updated_at = now
+    log.updated_at = physical_now
     await db.commit()
     await db.refresh(log)
     return log

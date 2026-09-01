@@ -82,12 +82,21 @@ async function performRefresh(): Promise<void> {
   useAuthStore.getState().setCsrfToken(token, body.data?.timezone, body.data?.bottle_style);
 }
 
+function getRefreshPromise(): Promise<void> {
+  if (!refreshing) {
+    refreshing = performRefresh().finally(() => {
+      refreshing = null;
+    });
+  }
+  return refreshing;
+}
+
 let restorePromise: Promise<boolean> | null = null;
 
 export async function tryRestoreSession(): Promise<boolean> {
   restorePromise = restorePromise ?? (async () => {
     try {
-      await performRefresh();
+      await getRefreshPromise();
       return true;
     } catch {
       useAuthStore.getState().clear();
@@ -113,14 +122,10 @@ api.interceptors.response.use(
     if (status === 401 && body?.code === ERROR_ACCESS_EXPIRED) {
       original._retried = true;
       try {
-        refreshing = refreshing ?? performRefresh();
-        await refreshing;
+        await getRefreshPromise();
       } catch {
-        refreshing = null;
         useAuthStore.getState().onSessionExpired();
         return Promise.reject(toApiError(error));
-      } finally {
-        refreshing = null;
       }
       return api(original);
     }

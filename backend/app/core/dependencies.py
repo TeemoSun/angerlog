@@ -24,6 +24,12 @@ class LoginRateLimiter:
 
     def check(self, key: str) -> None:
         now = time.monotonic()
+        stale = [
+            k for k, v in self._attempts.items() if not v or (now - v[-1] > self.window_seconds)
+        ]
+        for k in stale:
+            self._attempts.pop(k, None)
+
         dq = self._attempts[key]
         while dq and now - dq[0] > self.window_seconds:
             dq.popleft()
@@ -61,7 +67,11 @@ async def get_current_user_payload(
     user_id = payload.get("sub")
     if not user_id:
         raise errors.E_ACCESS_EXPIRED
-    user = await db.get(User, UUID(user_id))
+    try:
+        uid = UUID(user_id)
+    except ValueError:
+        raise errors.E_ACCESS_EXPIRED from None
+    user = await db.get(User, uid)
     if user is None:
         raise errors.E_ACCESS_EXPIRED
     return user, token

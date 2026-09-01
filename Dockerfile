@@ -2,7 +2,7 @@
 FROM node:20-bookworm-slim AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm ci || npm install
+RUN npm ci
 COPY frontend/ ./
 RUN npm run build && rm -rf dist/fonts
 
@@ -43,6 +43,9 @@ COPY backend/ ./
 
 # Layer 4: 前端编译生成的日常业务代码与样式（最高频变动，~11MB，推送压缩后~3MB）
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \

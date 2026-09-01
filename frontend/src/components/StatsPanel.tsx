@@ -74,15 +74,15 @@ function fillTrendSeries(
   if (granularity === "day") {
     const [sy, sm, sd] = startDate.split("-").map(Number);
     const [ey, em, ed] = endDate.split("-").map(Number);
-    const cur = new Date(sy, sm - 1, sd);
-    const end = new Date(ey, em - 1, ed);
+    const cur = new Date(Date.UTC(sy, sm - 1, sd));
+    const end = new Date(Date.UTC(ey, em - 1, ed));
     while (cur <= end) {
-      const y = cur.getFullYear();
-      const m = String(cur.getMonth() + 1).padStart(2, "0");
-      const d = String(cur.getDate()).padStart(2, "0");
+      const y = cur.getUTCFullYear();
+      const m = String(cur.getUTCMonth() + 1).padStart(2, "0");
+      const d = String(cur.getUTCDate()).padStart(2, "0");
       const key = `${y}-${m}-${d}`;
       result.push(map.get(key) ?? { period: key, count: 0, avg_intensity: null });
-      cur.setDate(cur.getDate() + 1);
+      cur.setUTCDate(cur.getUTCDate() + 1);
     }
   } else if (granularity === "month") {
     const [sy, sm] = startDate.split("-").map(Number);
@@ -101,18 +101,18 @@ function fillTrendSeries(
   } else if (granularity === "week") {
     const [sy, sm, sd] = startDate.split("-").map(Number);
     const [ey, em, ed] = endDate.split("-").map(Number);
-    const cur = new Date(sy, sm - 1, sd);
-    const end = new Date(ey, em - 1, ed);
-    const day = cur.getDay();
+    const cur = new Date(Date.UTC(sy, sm - 1, sd));
+    const end = new Date(Date.UTC(ey, em - 1, ed));
+    const day = cur.getUTCDay();
     const isoDay = day === 0 ? 7 : day;
-    cur.setDate(cur.getDate() - (isoDay - 1));
+    cur.setUTCDate(cur.getUTCDate() - (isoDay - 1));
     while (cur <= end) {
-      const y = cur.getFullYear();
-      const m = String(cur.getMonth() + 1).padStart(2, "0");
-      const d = String(cur.getDate()).padStart(2, "0");
+      const y = cur.getUTCFullYear();
+      const m = String(cur.getUTCMonth() + 1).padStart(2, "0");
+      const d = String(cur.getUTCDate()).padStart(2, "0");
       const key = `${y}-${m}-${d}`;
       result.push(map.get(key) ?? { period: key, count: 0, avg_intensity: null });
-      cur.setDate(cur.getDate() + 7);
+      cur.setUTCDate(cur.getUTCDate() + 7);
     }
   }
 

@@ -28,7 +28,7 @@ export function Bottle({
   onOpenStyleSelector,
   styleKey = DEFAULT_BOTTLE_STYLE,
 }: {
-  logs: { intensity: number }[];
+  logs: { id?: string; intensity: number }[];
   onOpenForm: () => void;
   onOpenStyleSelector?: () => void;
   styleKey?: string;
@@ -147,7 +147,7 @@ export function Bottle({
                 );
                 return (
                   <motion.g
-                    key={shown.length - 1 - i}
+                    key={log.id ?? `ball-${shown.length - 1 - i}`}
                     initial={{ cy: 20, opacity: 0, scale: 0.5 }}
                     animate={{ cy: y, opacity: 1, scale: 1 }}
                     transition={{

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import delete, func, select
@@ -29,9 +29,10 @@ async def upsert_user(
         )
         db.add(user)
     else:
-        user.password_hash = password_hash
-        user.timezone = timezone
-        user.updated_at = datetime.now()
+        if user.password_hash != password_hash or user.timezone != timezone:
+            user.password_hash = password_hash
+            user.timezone = timezone
+            user.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(user)
     return user
@@ -46,7 +47,7 @@ async def update_user_bottle_style(
     if user is None:
         return None
     user.bottle_style = bottle_style
-    user.updated_at = datetime.now()
+    user.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(user)
     return user
@@ -81,7 +82,7 @@ async def revoke_all_for_user(db: AsyncSession, user_id: UUID) -> None:
 
 
 async def purge_expired_refresh_tokens(db: AsyncSession) -> None:
-    stmt = delete(RefreshToken).where(RefreshToken.expires_at < datetime.now())
+    stmt = delete(RefreshToken).where(RefreshToken.expires_at < datetime.now(UTC))
     await db.execute(stmt)
     await db.commit()
 
@@ -93,7 +94,7 @@ async def count_active_refresh_tokens(db: AsyncSession, user_id: UUID) -> int:
         .where(
             RefreshToken.user_id == user_id,
             RefreshToken.revoked.is_(False),
-            RefreshToken.expires_at > datetime.now(),
+            RefreshToken.expires_at > datetime.now(UTC),
         )
     )
     return (await db.execute(stmt)).scalar_one()

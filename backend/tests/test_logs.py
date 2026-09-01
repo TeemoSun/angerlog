@@ -258,7 +258,8 @@ async def test_resolve_with_custom_resolved_at(client):
     parsed = datetime.fromisoformat(data["resolved_at"].replace("Z", "+00:00"))
     expected = datetime.fromisoformat(when.replace("Z", "+00:00"))
     assert abs((parsed - expected).total_seconds()) <= 5
-    assert data["updated_at"] == data["resolved_at"]
+    assert data["updated_at"] >= data["created_at"]
+    assert data["updated_at"] > data["resolved_at"]
 
 
 async def test_resolve_rejects_future_resolved_at(client):
