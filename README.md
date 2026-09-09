@@ -5,9 +5,9 @@
 ## 技术栈
 
 - **前端**：React 18 + TypeScript + Vite + Tailwind CSS v4（shadcn 风格组件）+ zustand + recharts
-- **后端**：Python 3.12 + FastAPI + SQLAlchemy 2.0 (async) + Alembic
+- **后端**：Go 1.23 + Chi v5 + pgx/v5 (CGO_ENABLED=0 静态编译，常驻内存仅 ~11MB)
 - **数据库**：PostgreSQL 15+
-- **部署**：Docker 镜像分发（HTTPS 由上层反向代理提供）
+- **部署**：Docker 极简 Alpine 镜像分发（HTTPS 由上层反向代理提供）
 
 ## 功能
 
@@ -26,7 +26,7 @@
 
 ## 快速开始（本地开发）
 
-需要：PostgreSQL（本地测试与开发均在 `localhost:54329`）、Python 3.12 + [uv](https://docs.astral.sh/uv/)、Node.js 20+。
+需要：PostgreSQL（本地测试与开发均在 `localhost:54329`）、Go 1.23+、Node.js 20+。
 
 1. **准备环境变量**：从模板创建根目录 `.env`，修改 `DATABASE_URL`、`USERNAME`、`PASSWORD`、`SECRET_KEY`、`CSRF_SECRET`：
 
@@ -38,11 +38,10 @@
 
    ```bash
    cd backend
-   uv sync
-   uv run uvicorn app.main:app --reload    # http://localhost:8000
+   go run ./cmd/angerlog    # http://localhost:8000
    ```
 
-   首次启动会自动执行 Alembic 迁移并写入默认用户。`PASSWORD` 为明文密码，启动时自动 bcrypt 哈希（cost=12）后入库。
+   首次启动会自动执行数据迁移并写入默认用户。`PASSWORD` 为明文密码，启动时自动 bcrypt 哈希（cost=12）后入库。
 
 3. **启动前端**（另开终端）：
 
@@ -52,13 +51,13 @@
    npm run dev           # http://localhost:5173，/api 与 /health 已代理到 :8000
    ```
 
-### 测试
+### 测试与静态检查
 
 ```bash
-cd backend && uv run pytest                        # 34 个用例（需 54329 上 emotion_bottle_test 库）
-cd frontend && npm run test                        # 12 个用例
-cd backend && uv run ruff check app && uv run mypy app   # lint + 类型检查
-cd frontend && npm run build                       # tsc -b && vite build
+cd backend && go test -v ./tests/...               # 自动化集成测试（需 54329 上 emotion_bottle_test 库）
+cd backend && go vet ./...                         # Go 静态代码检查
+cd frontend && npm run test                        # 前端自动化测试
+cd frontend && npm run build                       # 前端编译打包
 ```
 
 ## 源码部署（不用 Docker）
@@ -69,20 +68,20 @@ cd frontend && npm run build                       # tsc -b && vite build
    cd frontend && npm install && npm run build     # 产物在 frontend/dist/
    ```
 
-2. **安装后端依赖并配置**：
+2. **配置与编译后端**：
 
    ```bash
    cp .env.example .env
    # 修改：DATABASE_URL 指向你的 PostgreSQL、USERNAME、PASSWORD、
    #       SECRET_KEY、CSRF_SECRET、FRONTEND_DIST 指向 frontend/dist 的绝对路径
    cd backend
-   uv sync --no-dev
+   CGO_ENABLED=0 go build -ldflags="-s -w" -o angerlog ./cmd/angerlog
    ```
 
 3. **启动**（首次启动自动迁移 + 写入默认用户，前端由后端静态托管在 `/`）：
 
    ```bash
-   uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+   ./angerlog
    ```
 
    生产环境建议用 systemd / supervisor 托管该进程，前方由 Nginx 等反向代理提供 HTTPS。
@@ -107,7 +106,8 @@ docker compose ps               # 查看状态（db 健康后 backend 才会启�
 ```
 
 - PostgreSQL 数据保存在命名卷 `angerlog_pgdata`，`docker compose down` 不会丢失数据；如需重置数据可 `docker compose down -v`。
-- backend 启动时自动执行 Alembic 迁移并 upsert 默认用户，无需手动建库。
+- backend 启动时自动执行数据库迁移并 upsert 默认用户，无需手动建库。
+- backend 镜像内置原生健康检查探针：`/app/angerlog -healthcheck`。
 
 ### 3. 验证
 

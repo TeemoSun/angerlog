@@ -28,7 +28,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-app_user}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 未设置}@db:5432/${POSTGRES_DB:-emotion_bottle}
+      DATABASE_URL: postgres://${POSTGRES_USER:-app_user}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 未设置}@db:5432/${POSTGRES_DB:-emotion_bottle}
       USERNAME: ${USERNAME:-admin}
       PASSWORD: ${PASSWORD:?PASSWORD 未设置，请在 .env 中配置}
       USER_TIMEZONE: ${USER_TIMEZONE:-Asia/Shanghai}

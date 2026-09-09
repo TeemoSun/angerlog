@@ -6,50 +6,36 @@ RUN npm ci
 COPY frontend/ ./
 RUN npm run build && rm -rf dist/fonts
 
-# ===== Stage 2: 后端依赖（uv 仅在此阶段使用，不进运行时镜像）=====
-# 用 alpine 装依赖 + 运行时，全程 glibc-free，体积最小（~171MB 含全套手写体+宋体切片）
-FROM python:3.12-alpine AS backend-deps
-# 安装 uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
-ENV UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy \
-    UV_PROJECT_ENVIRONMENT=/opt/venv \
-    UV_CACHE_DIR=/tmp/uv-cache \
-    PYTHONUNBUFFERED=1
-
+# ===== Stage 2: Go 后端静态编译 =====
+FROM golang:1.23-alpine AS backend-builder
 WORKDIR /app/backend
-COPY backend/pyproject.toml backend/uv.lock* ./
-RUN uv sync --frozen --no-dev && rm -rf /tmp/uv-cache
+ENV GOPROXY=https://goproxy.cn,direct
+RUN apk add --no-cache ca-certificates
+COPY backend/go.mod backend/go.sum* ./
+RUN go mod download
+COPY backend/ ./
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /app/angerlog ./cmd/angerlog
 
-# ===== Stage 3: 运行时（按变更频率由低到高分层缓存）=====
-FROM python:3.12-alpine AS runtime
-# 后端基础镜像切到 alpine 后，uvicorn 将使用纯 asyncio 事件循环：
-# uvloop/httptools 只在 glibc 下有 wheel，musl 下 uv sync 自动跳过它们
-# （uv.lock 的 sys_platform 条件项，非配置缺失，行为与本地 dev 不同属预期）
-ENV PATH="/opt/venv/bin:$PATH" \
-    PYTHONUNBUFFERED=1
+# ===== Stage 3: 运行时（极简 Alpine 生产镜像，常驻内存 <15MB）=====
+FROM alpine:3.20 AS runtime
+RUN apk add --no-cache ca-certificates tzdata
 
-WORKDIR /app/backend
+WORKDIR /app
 
-# Layer 1: 运行时依赖环境（极低频变动，~77MB）
-COPY --from=backend-deps /opt/venv /opt/venv
-
-# Layer 2: 前端大体积静态切片字体（极低频变动，~33MB，独立分层长期缓存）
+# Layer 1: 前端大体积静态切片字体（独立分层长期缓存，~33MB）
 COPY frontend/public/fonts /app/frontend/dist/fonts
 
-# Layer 3: 后端业务代码（中/高频变动，~320KB）
-COPY backend/ ./
-
-# Layer 4: 前端编译生成的日常业务代码与样式（最高频变动，~11MB，推送压缩后~3MB）
+# Layer 2: 前端编译生成物（日常业务代码与样式）
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
+
+# Layer 3: Go 静态二进制（~11MB，内置 -healthcheck 探针）
+COPY --from=backend-builder /app/angerlog /app/angerlog
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
 EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["/app/angerlog", "-healthcheck"]
 
-# alembic 迁移由 main.py lifespan 自动执行，无需在此重复
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/angerlog"]
